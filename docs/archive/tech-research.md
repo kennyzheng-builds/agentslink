@@ -1,7 +1,8 @@
 # Agent-to-Agent 通信技术调研报告
 
-> 调研时间：2025年1月
-> 调研范围：OpenClaw 原生能力、Google A2A 协议、P2P 通信方案、端到端加密、基础设施选项
+> 初始调研：2025年1月
+> 更新调研：2026年3月8日（新增 A2A 深度分析、多框架对比）
+> 调研范围：OpenClaw 原生能力、Google A2A 协议、P2P 通信方案、端到端加密、基础设施选项、多 Agent 框架对比
 
 ---
 
@@ -148,11 +149,25 @@ Create Task → Submitted → Working → Input Required → Completed
 
 **估算工作量**：2-3 周实现基础版本
 
-### 2.6 建议
+### 2.6 建议（已更新 2026-03-08）
 
-- **长期关注**：A2A 可能成为行业标准
-- **MVP 暂缓**：协议过重，不适合快速验证
-- **未来集成**：可作为 Phase 2 的兼容层
+> ⚠️ 以下为 2025-01 的旧结论，已被推翻。
+
+~~- **长期关注**：A2A 可能成为行业标准~~
+~~- **MVP 暂缓**：协议过重，不适合快速验证~~
+~~- **未来集成**：可作为 Phase 2 的兼容层~~
+
+**2026-03-08 更新结论：采用 A2A 作为核心协议。**
+
+理由：
+1. A2A 于 2025-04 正式发布后，已有 50+ 企业参与，捐给 Linux 基金会，成为事实标准
+2. 我们的核心需求"跨平台 Agent 互操作"恰好是 A2A 的设计目标
+3. 自建协议 = 每个平台单独适配；用 A2A = 天然兼容所有支持 A2A 的 Agent
+4. A2A 的 Task 模型 + `input-required` 状态完美匹配"Agent 找主人确认"的需求
+5. 基于 HTTP 标准，比维护 WebSocket 长连接更简单
+6. JavaScript SDK 已有官方实现可参考
+
+详见 [技术架构 v2](./tech-arch.md) 和 [决策记录](./decisions.md)。
 
 ---
 
@@ -243,7 +258,9 @@ user_proxy.initiate_chat(assistant, message="Help me...")
 | LangChain | 编排框架 | ❌ | 低 | 成熟 |
 | AutoGen | 多 Agent 对话 | ⚠️ | 中 | 成熟 |
 
-**结论**：现有协议均不完全匹配需求，需自建轻量级方案。
+~~**结论**：现有协议均不完全匹配需求，需自建轻量级方案。~~
+
+**2026-03-08 更新结论**：Google A2A 协议已成熟，且完全匹配跨平台 Agent 互操作需求，决定采用 A2A 作为核心协议。详见 [决策记录](./decisions.md)。
 
 ---
 
@@ -854,9 +871,12 @@ await redis.setex(`a2a:code:${code}`, 600, sessionId);
 
 *评分：1-5，5 为最佳*
 
-### 7.2 推荐方案
+### 7.2 推荐方案（⚠️ 以下为旧方案，已被 v2 架构替代）
 
-#### MVP 阶段（现在）
+> 2026-03-08 更新：MVP 架构已切换到基于 A2A 协议的方案。
+> 详见 [技术架构 v2](./tech-arch.md)。
+
+#### MVP 阶段（旧方案）
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -998,4 +1018,109 @@ Agent A ←──── WebRTC (尝试) ────→ Agent B
 
 ---
 
-*报告完成。如需深入任何章节，请告知。*
+*以上为 2025-01 初始调研内容。以下为 2026-03-08 补充调研。*
+
+---
+
+## 9. 2026-03 补充调研：多 Agent 框架对比
+
+### 9.1 调研背景
+
+需求变更：从"仅支持 OpenClaw"扩展为"OpenClaw 优先，兼容 Claude Code、CodeEx 等"。需要重新评估通信协议选型。
+
+### 9.2 Google A2A 协议深度分析（2025-04 发布后）
+
+A2A 已从"新兴协议"变为"事实标准"：
+- **50+ 企业参与**：Google, Salesforce, SAP 等
+- **捐给 Linux 基金会**，社区治理
+- **SDK 可用**：Python, JavaScript, Java, Go, .NET
+
+#### A2A 核心架构更新
+
+三层架构：
+1. **数据模型层**（协议无关）：Task, Message, Part, Artifact, AgentCard
+2. **操作层**（抽象）：11 个操作（SendMessage, GetTask, CancelTask 等）
+3. **协议绑定**：JSON-RPC 2.0, gRPC, HTTP/REST
+
+#### Agent Card 详细结构
+
+```json
+{
+  "id": "agent-unique-id",
+  "name": "飞书权限助手",
+  "description": "擅长诊断和修复飞书 API 权限问题",
+  "version": "1.0.0",
+  "provider": { "name": "Kenny", "url": "..." },
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "multiTurn": true
+  },
+  "skills": [
+    {
+      "id": "feishu-permissions",
+      "description": "诊断飞书权限配置问题"
+    }
+  ],
+  "securitySchemes": [
+    { "type": "apiKey", "in": "header", "name": "X-API-Key" }
+  ]
+}
+```
+
+#### 三种消息投递模式
+
+| 模式 | 机制 | 适用场景 |
+|-----|------|---------|
+| **同步** | 请求-响应（blocking: true） | 快速问答 |
+| **流式** | SSE（SendStreamingMessage） | 实时对话 |
+| **异步推送** | Webhook（Push Notifications） | 长时间任务（小时/天级别） |
+
+#### input-required 状态
+
+A2A 原生支持"Agent 找主人确认"：
+```
+Task 状态: WORKING → INPUT_REQUIRED → WORKING → COMPLETED
+```
+- Agent 设状态为 `INPUT_REQUIRED`，附带需要确认的问题
+- 客户端收到状态变更，展示给主人
+- 主人回复后，发送新 Message 继续 Task
+
+### 9.3 各框架跨用户协作能力对比
+
+| 框架 | 跨用户支持 | 人类介入 | 通信模式 | 适合我们吗？ |
+|-----|-----------|---------|---------|------------|
+| **Google A2A** | ✅ 专门设计 | input-required | Task + Message | ✅ 最匹配 |
+| MCP | ❌ Agent↔Tool | Elicitation | 工具调用 | ❌ 定位不同 |
+| AutoGen | ❌ 单进程 | UserProxy | 群组聊天 | ❌ 不跨用户 |
+| CrewAI | ❌ 单进程 | human_input 标志 | 角色委派 | ❌ 不跨用户 |
+| LangGraph | ❌ 单进程 | Breakpoints | 状态图 | ❌ 不跨用户 |
+| OpenAI Swarm | ❌ 实验性 | 基本 | 顺序交接 | ❌ 非生产级 |
+
+**结论**：只有 Google A2A 是为跨用户/跨组织 Agent 协作设计的标准协议。
+
+### 9.4 A2A 的已知限制及解决方案
+
+| 限制 | 影响 | 解决方案 |
+|-----|------|---------|
+| Client-Server 不对称 | 我们需要双方平等对话 | Gateway 中转，或双方互为 Client/Server |
+| 需要公网 HTTP endpoint | 本地 Agent 无法直接暴露 | 通过 Gateway 代理 |
+| 无内置端到端加密 | 隐私敏感场景 | Phase 2 在 A2A 之上叠加 E2EE 层 |
+| 无连接码/链接机制 | 我们需要简单建联 | 自建 Gateway 提供连接码 → 会话路由 |
+
+### 9.5 A2A + MCP 互补关系
+
+```
+A2A: Agent ←→ Agent（横向，跨用户协作）
+MCP: Agent ←→ Tool（纵向，能力扩展）
+```
+
+- Agent 用 **MCP** 连接自己的工具和数据源
+- Agent 用 **A2A** 与其他 Agent 协作
+- 两者不冲突，可同时使用
+
+### 9.6 最终结论
+
+**采用 Google A2A 作为核心通信协议**，通过自建 Gateway 补充连接码/链接机制和本地 Agent 代理能力。
+
+详细架构见 [技术架构 v2](./tech-arch.md)。
