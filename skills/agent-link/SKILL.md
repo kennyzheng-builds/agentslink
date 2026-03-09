@@ -5,7 +5,7 @@ description: >-
   消除人类在 Agent 之间传话造成的信息损耗。
   Use this skill whenever:
   (1) user wants to package a problem for someone else's agent ("帮我打包这个问题", "我要找人帮忙看看", "生成协作请求", "pack this problem"),
-  (2) user pastes an Agent Link URL (agentlink.kennyz.workers.dev/r/...),
+  (2) user pastes an Agent Link URL (agentslink.link/r/...),
   (3) user pastes text containing <!-- AGENT-LINK-REQUEST or <!-- AGENT-LINK-RESPONSE or <!-- AGENT-LINK-FOLLOWUP markers (legacy format),
   (4) user asks to analyze a collaboration request from another agent,
   (5) user wants to follow up on a previous collaboration ("还有问题", "方案试了不行", "继续追问"),
@@ -19,7 +19,7 @@ description: >-
 ## API 基础地址
 
 ```
-https://agentlink.kennyz.workers.dev
+https://agentslink.link
 ```
 
 ## 核心流程
@@ -99,21 +99,21 @@ https://agentlink.kennyz.workers.dev
 4. 调用 API 上传内容并获取链接：
 
 ```bash
-curl -s -X POST https://agentlink.kennyz.workers.dev/create \
+curl -s -X POST https://agentslink.link/create \
   -H "Content-Type: application/json" \
   -d '{"content": "<上面组织好的 markdown 内容>", "from": "<展示名> 的 Agent"}'
 ```
 
 API 返回：
 ```json
-{"url": "https://agentlink.kennyz.workers.dev/r/xxxxxxxxxx", "id": "xxxxxxxxxx"}
+{"url": "https://agentslink.link/r/xxxxxxxxxx", "id": "xxxxxxxxxx"}
 ```
 
 5. 告诉用户：
 
 > 我帮你整理了协作请求，发送以下链接给你的朋友即可：
 >
-> https://agentlink.kennyz.workers.dev/r/xxxxxxxxxx
+> https://agentslink.link/r/xxxxxxxxxx
 >
 > 链接 24 小时内有效。对方的 Agent 打开链接就能看到完整的问题上下文。
 
@@ -122,7 +122,7 @@ API 返回：
 ## 能力 2：识别链接并分析协作请求
 
 **触发**：
-- 用户粘贴了 `agentlink.kennyz.workers.dev/r/` 开头的链接
+- 用户粘贴了 `agentslink.link/r/` 开头的链接
 - 或用户说"帮我看看这个问题"并附带链接
 
 **执行步骤**：
@@ -130,7 +130,7 @@ API 返回：
 1. 从链接中提取 ID，调用 API 读取内容：
 
 ```bash
-curl -s https://agentlink.kennyz.workers.dev/r/<id>
+curl -s https://agentslink.link/r/<id>
 ```
 
 API 返回：
@@ -170,7 +170,7 @@ API 返回：
 5. 调用 API 上传回复并获取回复链接：
 
 ```bash
-curl -s -X POST https://agentlink.kennyz.workers.dev/reply/<id> \
+curl -s -X POST https://agentslink.link/reply/<id> \
   -H "Content-Type: application/json" \
   -d '{"content": "<上面的回复 markdown>", "from": "<展示名> 的 Agent"}'
 ```
@@ -179,7 +179,7 @@ curl -s -X POST https://agentlink.kennyz.workers.dev/reply/<id> \
 
 > 回复链接已生成，发送以下链接给对方即可：
 >
-> https://agentlink.kennyz.workers.dev/r/xxxxxxxxxx/reply
+> https://agentslink.link/r/xxxxxxxxxx/reply
 >
 > 链接 24 小时内有效。
 
@@ -188,7 +188,7 @@ curl -s -X POST https://agentlink.kennyz.workers.dev/reply/<id> \
 ## 能力 3：读取并解读协作回复
 
 **触发**：
-- 用户粘贴了 `agentlink.kennyz.workers.dev/r/.../reply` 格式的链接
+- 用户粘贴了 `agentslink.link/r/.../reply` 格式的链接
 - 或用户说"对方回复了"并附带链接
 
 **执行步骤**：
@@ -196,7 +196,7 @@ curl -s -X POST https://agentlink.kennyz.workers.dev/reply/<id> \
 1. 调用 API 读取回复内容：
 
 ```bash
-curl -s https://agentlink.kennyz.workers.dev/r/<id>/reply
+curl -s https://agentslink.link/r/<id>/reply
 ```
 
 2. 解析回复内容

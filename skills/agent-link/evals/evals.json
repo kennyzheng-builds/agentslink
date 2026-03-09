@@ -4,19 +4,19 @@
     {
       "id": 1,
       "prompt": "我在用 feishu-sdk@2.3.1 调飞书通讯录 API 的时候一直报 403，错误码 10003 permission denied。我已经在应用权限里加了「通讯录读取」，也重新生成了 App Token，还是不行。Node.js 20.11.0，企业自建应用。帮我把这个问题打包一下，我找老王帮忙看看。",
-      "expected_output": "调用 POST https://agentlink.kennyz.workers.dev/create 上传结构化问题上下文，返回一个链接（格式：https://agentlink.kennyz.workers.dev/r/xxxxxxxxxx），提示用户把链接发给朋友，说明链接 24 小时有效",
+      "expected_output": "调用 POST https://agentslink.link/create 上传结构化问题上下文，返回一个链接（格式：https://agentslink.link/r/xxxxxxxxxx），提示用户把链接发给朋友，说明链接 24 小时有效",
       "files": []
     },
     {
       "id": 2,
-      "prompt": "帮我看看这个链接里的问题：https://agentlink.kennyz.workers.dev/r/DZ4b36tNYJ",
-      "expected_output": "调用 GET https://agentlink.kennyz.workers.dev/r/DZ4b36tNYJ 读取协作请求内容，分析问题并给出诊断和建议，然后调用 POST https://agentlink.kennyz.workers.dev/reply/DZ4b36tNYJ 上传回复，返回回复链接，提示用户把回复链接发回给对方",
+      "prompt": "帮我看看这个链接里的问题：https://agentslink.link/r/DZ4b36tNYJ",
+      "expected_output": "调用 GET https://agentslink.link/r/DZ4b36tNYJ 读取协作请求内容，分析问题并给出诊断和建议，然后调用 POST https://agentslink.link/reply/DZ4b36tNYJ 上传回复，返回回复链接，提示用户把回复链接发回给对方",
       "files": []
     },
     {
       "id": 3,
-      "prompt": "对方回复了，链接是：https://agentlink.kennyz.workers.dev/r/DZ4b36tNYJ/reply",
-      "expected_output": "调用 GET https://agentlink.kennyz.workers.dev/r/DZ4b36tNYJ/reply 读取回复内容，用通俗语言解读对方的诊断结论和建议方案，告诉用户推荐的下一步操作",
+      "prompt": "对方回复了，链接是：https://agentslink.link/r/DZ4b36tNYJ/reply",
+      "expected_output": "调用 GET https://agentslink.link/r/DZ4b36tNYJ/reply 读取回复内容，用通俗语言解读对方的诊断结论和建议方案，告诉用户推荐的下一步操作",
       "files": []
     }
   ]
