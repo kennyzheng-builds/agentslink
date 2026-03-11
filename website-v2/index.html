@@ -1,743 +1,366 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgentsLink — 让 Agent 帮你传话，不丢信息</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-cream: #FDFBF7;
-            --bg-warm: #F7F3ED;
-            --bg-sand: #EDE6DC;
-            --ink-primary: #1C1917;
-            --ink-secondary: #4A4540;
-            --ink-muted: #78726A;
-            --ink-subtle: #A8A099;
-            --terracotta: #B85C3F;
-            --terracotta-dark: #9A4A32;
-            --terracotta-light: #D4826A;
-            --sage: #6B7B6A;
-            --sage-light: #8A9A89;
-            --ochre: #C9A66B;
-            --border-subtle: #E5DDD3;
-            --border-light: #F0EBE4;
-            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-            --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agents Link</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
+  :root {
+    --bg: #faf9f6;
+    --surface: #f5f3ee;
+    --border: #e4e0d8;
+    --text: #1c1814;
+    --text-2: #544e44;
+    --text-3: #928a7e;
+    --accent: #9e7c2e;
+    --sage: #3d7a47;
+    --sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    --mono: 'DM Mono', 'SF Mono', 'Menlo', monospace;
+  }
 
-        body {
-            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-cream);
-            color: var(--ink-primary);
-            line-height: 1.6;
-            font-size: 16px;
-            -webkit-font-smoothing: antialiased;
-        }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        h1, h2, h3 {
-            font-family: 'Crimson Pro', Georgia, serif;
-            font-weight: 400;
-            line-height: 1.15;
-            letter-spacing: -0.02em;
-        }
-        h1 { font-size: clamp(3rem, 6vw, 5rem); }
-        h2 { font-size: clamp(2rem, 4vw, 3rem); }
-        h3 { font-size: clamp(1.25rem, 2vw, 1.5rem); font-weight: 500; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    font-kerning: normal;
+  }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+  .c { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+  .c-wide { max-width: 980px; margin: 0 auto; padding: 0 24px; }
 
-        /* Nav */
-        nav {
-            position: fixed; top: 0; left: 0; right: 0;
-            background: rgba(253, 251, 247, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 100;
-            transition: all 0.4s var(--ease-out-quart);
-        }
-        nav.scrolled {
-            background: rgba(253, 251, 247, 0.95);
-            box-shadow: 0 1px 0 var(--border-subtle);
-        }
-        nav .container {
-            display: flex; justify-content: space-between; align-items: center; height: 72px;
-        }
-        .logo {
-            font-family: 'Crimson Pro', serif; font-size: 1.5rem; font-weight: 600;
-            color: var(--ink-primary); text-decoration: none;
-            display: flex; align-items: center; gap: 10px; transition: opacity 0.3s;
-        }
-        .logo:hover { opacity: 0.7; }
-        .logo-mark { width: 28px; height: 28px; position: relative; }
-        .logo-mark::before, .logo-mark::after {
-            content: ''; position: absolute; border-radius: 50%;
-            transition: transform 0.4s var(--ease-out-expo);
-        }
-        .logo-mark::before {
-            width: 14px; height: 14px; background: var(--terracotta);
-            left: 0; top: 50%; transform: translateY(-50%);
-        }
-        .logo-mark::after {
-            width: 10px; height: 10px; background: var(--sage);
-            right: 0; top: 50%; transform: translateY(-50%);
-        }
-        .logo:hover .logo-mark::before { transform: translateY(-50%) translateX(4px); }
-        .logo:hover .logo-mark::after { transform: translateY(-50%) translateX(-4px); }
-        .nav-links { display: flex; gap: 40px; list-style: none; }
-        .nav-links a {
-            color: var(--ink-secondary); text-decoration: none; font-size: 0.9rem;
-            font-weight: 500; position: relative; padding: 4px 0; transition: color 0.3s;
-        }
-        .nav-links a::after {
-            content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 1px;
-            background: var(--terracotta); transition: width 0.3s var(--ease-out-expo);
-        }
-        .nav-links a:hover { color: var(--terracotta); }
-        .nav-links a:hover::after { width: 100%; }
+  /* ── Nav ── */
+  nav { padding: 20px 0; }
+  nav .c-wide { display: flex; align-items: center; justify-content: space-between; }
+  .brand {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+    letter-spacing: -0.3px;
+  }
+  .nav-gh {
+    font-size: 13px;
+    color: var(--text-3);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s;
+  }
+  .nav-gh:hover { color: var(--text-2); }
 
-        /* Hero */
-        .hero {
-            min-height: 100vh; display: flex; align-items: center;
-            padding-top: 72px; position: relative; overflow: hidden;
-        }
-        .hero-bg { position: absolute; inset: 0; pointer-events: none; }
-        .hero-bg-circle { position: absolute; border-radius: 50%; opacity: 0.4; }
-        .hero-bg-circle-1 {
-            width: 800px; height: 800px;
-            background: radial-gradient(circle, var(--ochre) 0%, transparent 70%);
-            top: -20%; right: -20%; opacity: 0.15;
-            animation: float 20s ease-in-out infinite;
-        }
-        .hero-bg-circle-2 {
-            width: 600px; height: 600px;
-            background: radial-gradient(circle, var(--sage) 0%, transparent 70%);
-            bottom: -10%; left: -10%; opacity: 0.1;
-            animation: float 25s ease-in-out infinite reverse;
-        }
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(30px, -30px); }
-        }
-        .hero-content {
-            max-width: 680px; position: relative; z-index: 1;
-        }
-        .hero-eyebrow {
-            font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.15em; color: var(--terracotta); margin-bottom: 24px;
-            opacity: 0; transform: translateY(20px);
-            animation: fadeUp 0.8s var(--ease-out-expo) 0.2s forwards;
-        }
-        .hero h1 {
-            margin-bottom: 28px; color: var(--ink-primary);
-            opacity: 0; transform: translateY(30px);
-            animation: fadeUp 0.8s var(--ease-out-expo) 0.4s forwards;
-        }
-        .hero h1 em {
-            font-style: italic; color: var(--terracotta); position: relative;
-        }
-        .hero h1 em::after {
-            content: ''; position: absolute; bottom: 0.1em; left: -0.1em; right: -0.1em;
-            height: 0.15em; background: var(--ochre); opacity: 0.3; z-index: -1;
-        }
-        .hero-description {
-            font-size: 1.25rem; color: var(--ink-secondary); margin-bottom: 48px;
-            max-width: 560px; line-height: 1.7;
-            opacity: 0; transform: translateY(20px);
-            animation: fadeUp 0.8s var(--ease-out-expo) 0.6s forwards;
-        }
-        .hero-actions {
-            display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 56px;
-            opacity: 0; transform: translateY(20px);
-            animation: fadeUp 0.8s var(--ease-out-expo) 0.8s forwards;
-        }
-        @keyframes fadeUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-        .hero-meta {
-            display: flex; align-items: center; gap: 32px;
-            font-size: 0.85rem; color: var(--ink-muted);
-            opacity: 0; animation: fadeIn 0.8s var(--ease-out-expo) 1s forwards;
-        }
-        .hero-meta span { display: flex; align-items: center; gap: 8px; }
-        .hero-meta-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sage); }
+  /* ── Hero ── */
+  .hero { padding: 128px 0 0; }
 
-        /* Buttons */
-        .btn {
-            display: inline-flex; align-items: center; gap: 10px;
-            padding: 16px 32px; border-radius: 4px; font-size: 0.95rem; font-weight: 600;
-            text-decoration: none; transition: all 0.3s var(--ease-out-quart);
-            cursor: pointer; border: none; position: relative; overflow: hidden;
-        }
-        .btn-primary { background: var(--terracotta); color: white; }
-        .btn-primary::before {
-            content: ''; position: absolute; inset: 0; background: var(--terracotta-dark);
-            transform: translateY(100%); transition: transform 0.4s var(--ease-out-expo);
-        }
-        .btn-primary:hover::before { transform: translateY(0); }
-        .btn-primary span { position: relative; z-index: 1; }
-        .btn-primary:hover {
-            transform: translateY(-2px); box-shadow: 0 8px 24px rgba(184, 92, 63, 0.25);
-        }
-        .btn-secondary {
-            background: transparent; color: var(--ink-primary);
-            border: 1px solid var(--border-subtle);
-        }
-        .btn-secondary:hover { background: var(--bg-warm); border-color: var(--ink-subtle); }
+  h1 {
+    font-size: clamp(44px, 5.5vw, 72px);
+    font-weight: 800;
+    letter-spacing: -3px;
+    line-height: 1.05;
+    color: var(--text);
+  }
 
-        /* Hero Visual */
-        .hero-visual {
-            position: absolute; right: 6%; top: 50%; transform: translateY(-50%);
-            width: 440px; height: 360px;
-            opacity: 0; animation: fadeIn 1s var(--ease-out-expo) 1s forwards;
-        }
-        .package-scene { position: relative; width: 100%; height: 100%; }
-        .agent-card {
-            position: absolute; background: white; border-radius: 12px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-            padding: 20px; font-size: 0.8rem; width: 160px;
-            transition: transform 0.6s var(--ease-out-expo);
-        }
-        .agent-card:hover { transform: scale(1.03); }
-        .agent-card.sender { left: 0; top: 20%; }
-        .agent-card.receiver { right: 0; top: 20%; }
-        .agent-card-label {
-            font-weight: 600; font-size: 0.7rem; text-transform: uppercase;
-            letter-spacing: 0.08em; margin-bottom: 8px;
-        }
-        .agent-card.sender .agent-card-label { color: var(--terracotta); }
-        .agent-card.receiver .agent-card-label { color: var(--sage); }
-        .agent-card-text { color: var(--ink-muted); font-size: 0.75rem; line-height: 1.5; }
+  .lead {
+    font-size: 19px;
+    color: var(--text-2);
+    line-height: 1.6;
+    margin-top: 24px;
+    max-width: 420px;
+  }
 
-        .package-arrow {
-            position: absolute; left: 38%; right: 38%; top: 42%;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .package-icon {
-            width: 48px; height: 48px; background: var(--bg-warm);
-            border: 2px solid var(--border-subtle); border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.25rem; animation: bobFloat 3s ease-in-out infinite;
-        }
-        @keyframes bobFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
-        .arrow-line {
-            position: absolute; top: 50%; height: 2px; background: var(--border-subtle);
-        }
-        .arrow-line.left { left: 0; right: 52%; }
-        .arrow-line.right { left: 52%; right: 0; }
+  .tools {
+    display: block;
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 32px;
+    letter-spacing: 0.3px;
+  }
 
-        .human-badge {
-            position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%);
-            background: var(--bg-warm); border: 1px solid var(--border-subtle);
-            border-radius: 20px; padding: 6px 16px; font-size: 0.7rem;
-            color: var(--ink-muted); white-space: nowrap;
-        }
+  /* ── Terminal ── */
+  .demo { margin-top: 56px; }
+  .terminal {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
 
-        /* Section shared */
-        .section-eyebrow {
-            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.15em; color: var(--terracotta); margin-bottom: 16px;
-        }
+  .t-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: #1c1c1c;
+  }
+  .t-bar-l { display: flex; align-items: center; gap: 12px; }
+  .dots { display: flex; gap: 7px; }
+  .dots span { width: 11px; height: 11px; border-radius: 50%; }
+  .dots .r { background: #ff5f57; }
+  .dots .y { background: #febc2e; }
+  .dots .g { background: #28c840; }
+  .t-label { font-family: var(--mono); font-size: 12px; color: rgba(255,255,255,0.28); }
 
-        /* Comparison */
-        .comparison {
-            padding: 140px 0; background: var(--bg-warm); position: relative;
-        }
-        .comparison::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
-        }
-        .comparison-header { text-align: center; margin-bottom: 80px; }
-        .comparison-header .section-eyebrow { color: var(--sage); }
-        .comparison-header h2 { margin-bottom: 16px; }
-        .comparison-header > p { color: var(--ink-secondary); font-size: 1.125rem; }
-        .comparison-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
-            max-width: 960px; margin: 0 auto;
-        }
-        .comparison-card {
-            border-radius: 12px; padding: 48px; position: relative; overflow: hidden;
-        }
-        .comparison-card.before {
-            background: var(--bg-cream); border: 1px solid var(--border-subtle);
-        }
-        .comparison-card.after { background: var(--ink-primary); color: var(--bg-cream); }
-        .comparison-card h3 {
-            margin-bottom: 32px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
-            text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;
-        }
-        .comparison-card.before h3 { color: var(--ink-muted); }
-        .comparison-card.after h3 { color: var(--ochre); }
-        .chat-flow { display: flex; flex-direction: column; gap: 12px; }
-        .chat-bubble {
-            padding: 14px 18px; border-radius: 16px; font-size: 0.9rem;
-            max-width: 90%; line-height: 1.5;
-        }
-        .chat-bubble.you {
-            background: white; color: var(--ink-primary); margin-left: auto;
-            border-bottom-right-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        }
-        .chat-bubble.friend {
-            background: var(--bg-sand); color: var(--ink-primary); border-bottom-left-radius: 4px;
-        }
-        .comparison-card.after .chat-bubble.you {
-            background: rgba(184, 92, 63, 0.2); color: var(--bg-cream); box-shadow: none;
-        }
-        .comparison-card.after .chat-bubble.agent {
-            background: rgba(107, 123, 106, 0.3); color: var(--bg-cream); border-bottom-left-radius: 4px;
-        }
-        .chat-bubble strong { font-weight: 600; opacity: 0.7; }
-        .info-lost {
-            font-size: 0.75rem; color: var(--ink-muted); text-align: center;
-            margin-top: 20px; font-style: italic;
-        }
+  .copy-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    color: rgba(255,255,255,0.4);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.16); }
+  .copy-btn.copied { color: #7cc688; border-color: rgba(124,198,136,0.25); }
+  .copy-btn svg { width: 14px; height: 14px; }
 
-        /* How It Works */
-        .how-it-works { padding: 140px 0; background: var(--bg-cream); }
-        .how-it-works-header { text-align: center; margin-bottom: 80px; }
-        .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; }
-        .step {
-            position: relative; padding: 48px 40px;
-            background: var(--bg-warm); border-radius: 8px;
-            transition: transform 0.4s var(--ease-out-expo), box-shadow 0.4s;
-        }
-        .step:hover {
-            transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
-        }
-        .step-number {
-            font-family: 'Crimson Pro', serif; font-size: 4rem; font-weight: 400;
-            color: var(--border-subtle); line-height: 1; margin-bottom: 24px;
-            transition: color 0.4s;
-        }
-        .step:hover .step-number { color: var(--terracotta-light); }
-        .step h3 { margin-bottom: 12px; color: var(--ink-primary); font-size: 1.25rem; }
-        .step p { color: var(--ink-secondary); line-height: 1.7; font-size: 0.95rem; margin-bottom: 20px; }
-        .step-command {
-            background: var(--bg-cream); padding: 12px 16px; border-radius: 4px;
-            font-family: 'SF Mono', Monaco, monospace; font-size: 0.8rem;
-            color: var(--terracotta); display: inline-block; border: 1px solid var(--border-subtle);
-        }
+  .t-body { background: #212121; padding: 24px; }
+  .t-body pre {
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.75;
+    color: rgba(255,255,255,0.8);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+  }
+  .t-body .hl {
+    color: #7aafcf;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(122,175,207,0.25);
+  }
 
-        /* Features */
-        .features {
-            padding: 140px 0; background: var(--bg-warm); position: relative;
-        }
-        .features::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
-        }
-        .features-header { text-align: center; margin-bottom: 80px; }
-        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
-        .feature {
-            text-align: center; padding: 48px 32px;
-            background: var(--bg-cream); border-radius: 8px;
-            transition: transform 0.4s var(--ease-out-expo);
-        }
-        .feature:hover { transform: translateY(-4px); }
-        .feature-icon {
-            width: 64px; height: 64px; margin: 0 auto 24px;
-            display: flex; align-items: center; justify-content: center;
-            background: var(--bg-warm); border-radius: 50%; font-size: 1.75rem;
-            transition: transform 0.4s var(--ease-out-expo), background 0.4s;
-        }
-        .feature:hover .feature-icon { transform: scale(1.1); background: var(--border-subtle); }
-        .feature h3 {
-            margin-bottom: 12px; font-family: 'DM Sans', sans-serif;
-            font-size: 1.125rem; font-weight: 600; color: var(--ink-primary);
-        }
-        .feature p { color: var(--ink-secondary); font-size: 0.95rem; line-height: 1.6; }
+  .hint {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 14px;
+  }
 
-        /* Install Section */
-        .install {
-            padding: 140px 0; background: var(--bg-cream); position: relative;
-        }
-        .install::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
-        }
-        .install-header { text-align: center; margin-bottom: 64px; }
-        .install-header h2 { margin-bottom: 16px; }
-        .install-header p { color: var(--ink-secondary); font-size: 1.125rem; max-width: 520px; margin: 0 auto; }
+  /* ── Pitch ── */
+  .pitch { margin-top: 96px; }
+  .pitch-problem,
+  .pitch-solution {
+    font-size: 17px;
+    color: var(--text-2);
+    line-height: 1.8;
+  }
+  .pitch-solution { margin-top: 24px; }
+  .pitch-problem strong,
+  .pitch-solution strong {
+    color: var(--text);
+    font-weight: 600;
+  }
 
-        .install-box {
-            max-width: 720px; margin: 0 auto; background: var(--ink-primary);
-            border-radius: 12px; overflow: hidden;
-        }
-        .install-box-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-        .install-box-title {
-            font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
-            color: var(--ink-subtle); text-transform: uppercase; letter-spacing: 0.08em;
-        }
-        .install-copy-btn {
-            background: var(--terracotta); color: white; border: none;
-            padding: 8px 20px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;
-            cursor: pointer; transition: all 0.3s var(--ease-out-quart);
-            font-family: 'DM Sans', sans-serif;
-        }
-        .install-copy-btn:hover {
-            background: var(--terracotta-dark); transform: translateY(-1px);
-        }
-        .install-copy-btn.copied { background: var(--sage); }
-        .install-content {
-            padding: 24px; color: rgba(255,255,255,0.75); font-family: 'SF Mono', Monaco, monospace;
-            font-size: 0.8rem; line-height: 1.8; white-space: pre-wrap; word-break: break-all;
-            max-height: 320px; overflow-y: auto;
-        }
-        .install-content .highlight { color: var(--terracotta-light); }
-        .install-content .comment { color: rgba(255,255,255,0.35); }
+  /* ── Trust ── */
+  .trust-line {
+    font-size: 13px;
+    color: var(--text-3);
+    letter-spacing: 0.2px;
+    margin-top: 48px;
+  }
 
-        .install-steps {
-            max-width: 720px; margin: 40px auto 0; display: grid;
-            grid-template-columns: repeat(3, 1fr); gap: 24px;
-        }
-        .install-step {
-            text-align: center; padding: 24px 16px;
-        }
-        .install-step-num {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: var(--bg-warm); border: 1px solid var(--border-subtle);
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 12px; font-family: 'Crimson Pro', serif;
-            font-size: 1rem; font-weight: 600; color: var(--terracotta);
-        }
-        .install-step p {
-            font-size: 0.85rem; color: var(--ink-secondary); line-height: 1.5;
-        }
+  /* ── Footer ── */
+  footer { border-top: 1px solid var(--border); padding: 20px 0; margin-top: 128px; }
+  footer .c-wide { display: flex; align-items: center; justify-content: space-between; }
+  .f-left { display: flex; align-items: baseline; gap: 10px; }
+  .f-brand { font-size: 14px; font-weight: 700; color: var(--text); text-decoration: none; }
+  .f-love { font-size: 11px; color: var(--text-3); }
+  .f-right a {
+    font-size: 13px;
+    color: var(--text-3);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s;
+  }
+  .f-right a:hover { color: var(--text-2); }
 
-        /* Footer */
-        footer {
-            padding: 64px 0; background: var(--ink-primary); color: var(--ink-subtle);
-        }
-        footer .container {
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .footer-left { display: flex; align-items: center; gap: 32px; }
-        .footer-logo {
-            font-family: 'Crimson Pro', serif; font-weight: 600; color: var(--bg-cream);
-            text-decoration: none; font-size: 1.25rem;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .footer-links { display: flex; gap: 28px; list-style: none; }
-        .footer-links a {
-            color: var(--ink-subtle); text-decoration: none; font-size: 0.875rem;
-            transition: color 0.3s;
-        }
-        .footer-links a:hover { color: var(--bg-cream); }
-        .footer-right { font-size: 0.875rem; color: var(--ink-muted); }
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--bg);
+    border: 1px solid var(--sage);
+    color: var(--sage);
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    opacity: 0;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .hero-visual { display: none; }
-            .steps { grid-template-columns: 1fr; gap: 24px; }
-            .features-grid { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 768px) {
-            .container { padding: 0 20px; }
-            .nav-links { display: none; }
-            .comparison-grid { grid-template-columns: 1fr; }
-            .hero-actions { flex-direction: column; }
-            .btn { width: 100%; justify-content: center; }
-            footer .container { flex-direction: column; gap: 24px; text-align: center; }
-            .footer-left { flex-direction: column; gap: 16px; }
-            .step { padding: 32px 24px; }
-            .comparison-card { padding: 32px 24px; }
-            .install-steps { grid-template-columns: 1fr; gap: 8px; }
-            .hero-meta { flex-direction: column; gap: 12px; align-items: flex-start; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-    </style>
+  /* ── Animation ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero { animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .demo { animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+  .pitch { animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+
+  /* ── Mobile ── */
+  @media (max-width: 640px) {
+    .hero { padding: 72px 0 0; }
+    h1 { letter-spacing: -2px; }
+    .lead { font-size: 17px; max-width: 100%; }
+    .tools { margin-top: 24px; }
+    .demo { margin-top: 40px; }
+    .t-bar { padding: 12px 16px; }
+    .t-label { display: none; }
+    .t-body { padding: 20px 16px; }
+    .t-body pre { font-size: 13px; }
+    .pitch { margin-top: 64px; }
+    .pitch-problem,
+    .pitch-solution { font-size: 16px; }
+    .trust-line { margin-top: 32px; font-size: 12px; }
+    footer { margin-top: 72px; }
+    footer .c-wide { flex-direction: column; gap: 8px; text-align: center; }
+  }
+</style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav id="nav">
-        <div class="container">
-            <a href="#" class="logo">
-                <span class="logo-mark"></span>
-                AgentsLink
-            </a>
-            <ul class="nav-links">
-                <li><a href="#how-it-works">使用流程</a></li>
-                <li><a href="#features">特性</a></li>
-                <li><a href="#install">安装</a></li>
-            </ul>
+
+<nav>
+  <div class="c-wide">
+    <a class="brand" href="/">Agents Link</a>
+    <a class="nav-gh" href="https://github.com/kennyzheng-builds/agent-link" target="_blank">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub
+    </a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="c">
+    <h1 data-i18n="title" data-i18n-html="1">人传话<br>只会添乱</h1>
+    <p class="lead" data-i18n="lead">让 Agent 直接对话。上下文完整传递，信息零损耗。</p>
+    <span class="tools">Openclaw / Claude Code / Codex</span>
+  </div>
+</section>
+
+<section class="demo">
+  <div class="c">
+    <div class="terminal">
+      <div class="t-bar">
+        <div class="t-bar-l">
+          <div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+          <span class="t-label" data-i18n="barLabel">Send to your Agent</span>
         </div>
-    </nav>
+        <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="copyBtnText" data-i18n="copy">Copy</span>
+        </button>
+      </div>
+      <div class="t-body">
+        <pre id="promptText">帮我安装 Agents Link 协作技能：
+<span class="hl">https://agentslink.link/install</span></pre>
+      </div>
+    </div>
+    <p class="hint" data-i18n="hint">安装后说「帮我打包这个问题」即可</p>
+  </div>
+</section>
 
-    <!-- Hero -->
-    <section class="hero">
-        <div class="hero-bg">
-            <div class="hero-bg-circle hero-bg-circle-1"></div>
-            <div class="hero-bg-circle hero-bg-circle-2"></div>
-        </div>
-        <div class="container">
-            <div class="hero-content">
-                <span class="hero-eyebrow">Agent 协作工具</span>
-                <h1>传话不丢<em>上下文</em></h1>
-                <p class="hero-description">
-                    你在两个 Agent 之间传话时，报错信息、代码片段、配置细节都在丢失。AgentsLink 让 Agent 自己打包和解读上下文，你只需要转发。
-                </p>
-                <div class="hero-actions">
-                    <a href="#install" class="btn btn-primary"><span>一键安装</span></a>
-                    <a href="#how-it-works" class="btn btn-secondary">了解原理</a>
-                </div>
-                <div class="hero-meta">
-                    <span><span class="hero-meta-dot"></span>零成本，纯 Skill</span>
-                    <span><span class="hero-meta-dot"></span>只读咨询，安全可控</span>
-                    <span><span class="hero-meta-dot"></span>信息零损耗</span>
-                </div>
-            </div>
-        </div>
-        <div class="hero-visual">
-            <div class="package-scene">
-                <div class="agent-card sender">
-                    <div class="agent-card-label">你的 Agent</div>
-                    <div class="agent-card-text">自动打包：报错信息、环境配置、已尝试方案...</div>
-                </div>
-                <div class="package-arrow">
-                    <div class="arrow-line left"></div>
-                    <div class="package-icon">&#128230;</div>
-                    <div class="arrow-line right"></div>
-                </div>
-                <div class="agent-card receiver">
-                    <div class="agent-card-label">朋友的 Agent</div>
-                    <div class="agent-card-text">完整读取上下文，精准分析并回复</div>
-                </div>
-                <div class="human-badge">&#128100; 你只负责转发</div>
-            </div>
-        </div>
-    </section>
+<section class="pitch">
+  <div class="c">
+    <p class="pitch-problem" data-i18n="problem" data-i18n-html="1">你的 Agent 遇到搞不定的问题，想找人帮忙看看。截图、复制报错、总结上下文发给朋友——等对方 Agent 拿到时，<strong>关键细节已经丢了一半</strong>。</p>
+    <p class="pitch-solution" data-i18n="solution" data-i18n-html="1">Agents Link 让你的 Agent <strong>一键打包完整上下文</strong>，生成一条链接。对方的 Agent 直接读取、分析、回复——信息零损耗。</p>
+    <p class="trust-line" data-i18n="trust">24h 自动销毁 · 敏感信息过滤 · 内容完全可见 · 无需注册</p>
+  </div>
+</section>
 
-    <!-- Comparison -->
-    <section class="comparison">
-        <div class="container">
-            <div class="comparison-header">
-                <span class="section-eyebrow">Before & After</span>
-                <h2>告别信息折损</h2>
-                <p>人工传话每一步都在丢细节，Agent 打包保留 100% 上下文</p>
-            </div>
-            <div class="comparison-grid">
-                <div class="comparison-card before">
-                    <h3>人工传话</h3>
-                    <div class="chat-flow">
-                        <div class="chat-bubble you"><strong>你:</strong> 我 Agent 遇到个飞书权限问题</div>
-                        <div class="chat-bubble friend"><strong>朋友:</strong> 什么问题？</div>
-                        <div class="chat-bubble you"><strong>你:</strong> 错误码 10003，好像是没有通讯录权限</div>
-                        <div class="chat-bubble friend"><strong>朋友:</strong> 你试试去后台开一下</div>
-                        <div class="chat-bubble you"><strong>你:</strong> 后台在哪？</div>
-                    </div>
-                    <p class="info-lost">报错详情、SDK 版本、已尝试方案全部丢失</p>
-                </div>
-                <div class="comparison-card after">
-                    <h3>AgentsLink</h3>
-                    <div class="chat-flow">
-                        <div class="chat-bubble you"><strong>你:</strong> 帮我把这个问题打包，我找老王帮忙</div>
-                        <div class="chat-bubble agent"><strong>Agent:</strong> 已整理协作请求，包含报错、环境、已尝试方案。复制发给老王即可。</div>
-                        <div class="chat-bubble agent"><strong>Agent:</strong> 收到老王 Agent 的回复：错误码 10003 是租户管理员未审批权限，已给出 4 步解决方案。</div>
-                        <div class="chat-bubble agent"><strong>Agent:</strong> 建议先执行方案 A，需要你联系管理员审批。</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+<footer>
+  <div class="c-wide">
+    <div class="f-left">
+      <a class="f-brand" href="/">Agents Link</a>
+      <span class="f-love">made with &#x1F497;</span>
+    </div>
+    <div class="f-right">
+      <a href="https://github.com/kennyzheng-builds/agent-link" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</footer>
 
-    <!-- How It Works -->
-    <section class="how-it-works" id="how-it-works">
-        <div class="container">
-            <div class="how-it-works-header">
-                <span class="section-eyebrow">使用流程</span>
-                <h2>三步完成协作</h2>
-                <p>Agent 负责打包和解读，你只需要转发</p>
-            </div>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">01</div>
-                    <h3>Agent 打包问题</h3>
-                    <p>对你的 Agent 说"帮我打包这个问题"，它会从当前对话中提取报错信息、代码片段、环境配置、已尝试方案，生成结构化的协作请求。</p>
-                    <div class="step-command">"帮我打包，找人帮忙看看"</div>
-                </div>
-                <div class="step">
-                    <div class="step-number">02</div>
-                    <h3>你转发给朋友</h3>
-                    <p>复制 Agent 生成的文本，通过微信、飞书或任何渠道发给朋友。朋友粘贴给自己的 Agent，对方 Agent 自动识别并分析。</p>
-                    <div class="step-command">微信 / 飞书 / 任何方式</div>
-                </div>
-                <div class="step">
-                    <div class="step-number">03</div>
-                    <h3>收到专业回复</h3>
-                    <p>朋友的 Agent 基于完整上下文分析问题，生成结构化回复。朋友发回给你，你的 Agent 整合建议，告诉你下一步怎么做。</p>
-                    <div class="step-command">"方案 A 试了不行，继续追问"</div>
-                </div>
-            </div>
-        </div>
-    </section>
+<div class="toast" id="toast"></div>
 
-    <!-- Features -->
-    <section class="features" id="features">
-        <div class="container">
-            <div class="features-header">
-                <span class="section-eyebrow">为什么选择 AgentsLink</span>
-                <h2>简单、安全、零成本</h2>
-            </div>
-            <div class="features-grid">
-                <div class="feature">
-                    <div class="feature-icon">&#128230;</div>
-                    <h3>信息零损耗</h3>
-                    <p>Agent 打包完整技术上下文：报错、代码、配置、已尝试方案，比人工转述准确 10 倍。</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">&#128274;</div>
-                    <h3>只读咨询模式</h3>
-                    <p>V1 只做只读咨询——发问题、收建议。不涉及文件写入或远程执行，安全边界清晰。</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">&#128100;</div>
-                    <h3>你始终掌控</h3>
-                    <p>打包内容在对话流中完全可见。手动传递天然过滤不想发的信息。决策权始终在你。</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">&#128176;</div>
-                    <h3>零成本运行</h3>
-                    <p>纯 Skill 文件，不需要服务器、域名或数据库。安装后立即可用。</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">&#128737;</div>
-                    <h3>自动脱敏</h3>
-                    <p>打包时自动过滤 API Key、密码、私钥等敏感信息，替换为安全占位符。</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">&#128260;</div>
-                    <h3>支持追问</h3>
-                    <p>一轮不够？直接说"继续追问"，Agent 结合之前的上下文生成追问请求，多轮协作直到解决。</p>
-                </div>
-            </div>
-        </div>
-    </section>
+<script>
+var PROMPT_ZH = '帮我安装 Agents Link 协作技能：https://agentslink.link/install';
+var PROMPT_EN = 'Install the Agents Link skill: https://agentslink.link/install';
 
-    <!-- Install -->
-    <section class="install" id="install">
-        <div class="container">
-            <div class="install-header">
-                <span class="section-eyebrow">Get Started</span>
-                <h2>一键安装</h2>
-                <p>复制下面的内容，粘贴给你的 Claude Code，就完成了</p>
-            </div>
-            <div class="install-box">
-                <div class="install-box-header">
-                    <span class="install-box-title">粘贴给 Claude Code</span>
-                    <button class="install-copy-btn" id="copyBtn" onclick="copyInstallText()">复制</button>
-                </div>
-                <div class="install-content" id="installText"><span class="comment"># AgentsLink 安装请求</span>
+var i18n = {
+  zh: {
+    title: '人传话<br>只会添乱',
+    lead: '让 Agent 直接对话。上下文完整传递，信息零损耗。',
+    barLabel: '发给你的 Agent',
+    hint: '安装后说「帮我打包这个问题」即可',
+    problem: '你的 Agent 遇到搞不定的问题，想找人帮忙看看。截图、复制报错、总结上下文发给朋友——等对方 Agent 拿到时，<strong>关键细节已经丢了一半</strong>。',
+    solution: 'Agents Link 让你的 Agent <strong>一键打包完整上下文</strong>，生成一条链接。对方的 Agent 直接读取、分析、回复——信息零损耗。',
+    trust: '24h 自动销毁 · 敏感信息过滤 · 内容完全可见 · 无需注册',
+    copy: '复制', copied: '已复制',
+    toastCopied: '已复制，发给你的 Agent 吧',
+  },
+  en: {
+    title: 'Humans Relay.<br>Context Dies.',
+    lead: 'Let Agents talk directly. Full context, zero information loss.',
+    barLabel: 'Send to your Agent',
+    hint: 'After installing, say "pack this problem"',
+    problem: 'Your Agent hits a wall and you need another pair of eyes. You screenshot errors, copy logs, summarize context for a friend\u2014by the time their Agent gets it, <strong>half the details are gone</strong>.',
+    solution: 'Agents Link lets your Agent <strong>pack full context into a single link</strong>. The other Agent reads, analyzes, and replies directly\u2014zero information loss.',
+    trust: '24h auto-delete \u00b7 Sensitive info filtered \u00b7 Full visibility \u00b7 No account needed',
+    copy: 'Copy', copied: 'Copied',
+    toastCopied: 'Copied \u2014 send it to your Agent',
+  }
+};
 
-请帮我安装 AgentsLink skill。
+var lang = /^zh/i.test(navigator.language) ? 'zh' : 'en';
+var t = i18n[lang];
+var prompt = lang === 'zh' ? PROMPT_ZH : PROMPT_EN;
 
-<span class="highlight">1. 创建目录</span> ~/.claude/skills/agents-link/
-<span class="highlight">2. 创建文件</span> ~/.claude/skills/agents-link/SKILL.md
+document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+document.title = 'Agents Link';
 
-SKILL.md 内容要求：
-- 名称：AgentsLink v1 — 协作上下文包
-- 能力 1「打包」：当我说"帮我打包"或"找人帮忙看看"时，从当前对话上下文中提取问题描述、环境信息、报错信息、已尝试方案，生成 &lt;!-- AGENTS-LINK-REQUEST v1 --&gt; 格式的协作请求
-- 能力 2「识别分析」：当收到包含 &lt;!-- AGENTS-LINK-REQUEST v1 --&gt; 标记的文本时，自动识别为协作请求，基于自身能力分析问题，生成 &lt;!-- AGENTS-LINK-RESPONSE v1 --&gt; 格式的回复
-- 能力 3「解读回复」：当收到包含 &lt;!-- AGENTS-LINK-RESPONSE v1 --&gt; 标记的文本时，解析回复内容，结合之前的问题上下文整合建议
-- 能力 4「追问」：当我说"继续追问"时，结合之前的请求和回复生成 &lt;!-- AGENTS-LINK-FOLLOWUP v1 --&gt; 格式的追问
-- 安全规则：打包时自动过滤 API Key、密码、私钥，替换为 [REDACTED]；脱敏本地绝对路径
-- 模式：只读咨询，不涉及写操作或远程执行
+if (lang === 'en') {
+  document.getElementById('promptText').innerHTML = 'Install the Agents Link skill:\n<span class="hl">https://agentslink.link/install</span>';
+}
 
-安装完成后告诉我如何使用。</div>
-            </div>
-            <div class="install-steps">
-                <div class="install-step">
-                    <div class="install-step-num">1</div>
-                    <p>点击上方「复制」按钮</p>
-                </div>
-                <div class="install-step">
-                    <div class="install-step-num">2</div>
-                    <p>粘贴给你的 Claude Code</p>
-                </div>
-                <div class="install-step">
-                    <div class="install-step-num">3</div>
-                    <p>安装完成，开始使用</p>
-                </div>
-            </div>
-        </div>
-    </section>
+document.querySelectorAll('[data-i18n]').forEach(function(el) {
+  var key = el.dataset.i18n;
+  if (t[key]) el[el.dataset.i18nHtml ? 'innerHTML' : 'textContent'] = t[key];
+});
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-left">
-                <a href="#" class="footer-logo">
-                    <span class="logo-mark"></span>
-                    AgentsLink
-                </a>
-                <ul class="footer-links">
-                    <li><a href="#how-it-works">使用流程</a></li>
-                    <li><a href="#install">安装</a></li>
-                </ul>
-            </div>
-            <div class="footer-right">
-                AgentsLink v1 — 协作上下文包
-            </div>
-        </div>
-    </footer>
+function showToast(msg) {
+  var toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(function() { toast.classList.remove('show'); }, 2200);
+}
 
-    <script>
-        // Nav scroll effect
-        const nav = document.getElementById('nav');
-        window.addEventListener('scroll', () => {
-            nav.classList.toggle('scrolled', window.scrollY > 50);
-        });
-
-        // Copy install text
-        function copyInstallText() {
-            const el = document.getElementById('installText');
-            const text = el.innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                const btn = document.getElementById('copyBtn');
-                btn.textContent = '已复制';
-                btn.classList.add('copied');
-                setTimeout(() => {
-                    btn.textContent = '复制';
-                    btn.classList.remove('copied');
-                }, 2000);
-            });
-        }
-
-        // Intersection Observer for fade-in
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
-        document.querySelectorAll('.step, .feature, .comparison-card, .install-box').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(20px)';
-            el.style.transition = 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-            observer.observe(el);
-        });
-    </script>
+function copyPrompt() {
+  navigator.clipboard.writeText(prompt).then(function() {
+    var btn = document.getElementById('copyBtn');
+    var txt = document.getElementById('copyBtnText');
+    btn.classList.add('copied');
+    txt.textContent = t.copied;
+    showToast(t.toastCopied);
+    setTimeout(function() { btn.classList.remove('copied'); txt.textContent = t.copy; }, 2500);
+  });
+}
+</script>
 </body>
 </html>
