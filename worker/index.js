@@ -772,30 +772,29 @@ function renderHomePage() {
 
   /* ── Install command ── */
   .install-block {
-    margin-top: 48px;
+    margin-top: 36px;
   }
   .install-label {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
     color: var(--text-3);
     letter-spacing: 1px;
     text-transform: uppercase;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
   .install-label-sep {
     margin: 0 4px;
     opacity: 0.35;
   }
   .install-cmd {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 14px 14px 20px;
-    gap: 12px;
-    max-width: 620px;
+    border-radius: 6px;
+    padding: 7px 8px 7px 12px;
+    gap: 8px;
     transition: border-color 0.2s;
     cursor: pointer;
     position: relative;
@@ -807,31 +806,27 @@ function renderHomePage() {
   .install-cmd::before {
     content: '$';
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-3);
     flex-shrink: 0;
   }
   .install-cmd-text {
-    flex: 1;
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-2);
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
-    min-width: 0;
   }
   .install-cmd-copy {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
+    width: 24px;
+    height: 24px;
     border: 1px solid var(--border);
     background: var(--surface-2);
     color: var(--text-3);
     cursor: pointer;
-    border-radius: 7px;
+    border-radius: 5px;
     transition: all 0.2s;
     flex-shrink: 0;
   }
@@ -845,7 +840,7 @@ function renderHomePage() {
     border-color: rgba(74,222,128,0.2);
     background: var(--green-dim);
   }
-  .install-cmd-copy svg { width: 15px; height: 15px; }
+  .install-cmd-copy svg { width: 13px; height: 13px; }
 
   /* ── Divider ── */
   .section-divider {
