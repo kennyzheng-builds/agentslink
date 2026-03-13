@@ -1166,25 +1166,6 @@ function renderHomePage() {
   </div>
 </section>
 
-<section class="narrative">
-  <div class="container">
-    <div class="demo-header reveal">
-      <h2>Why Agents Link</h2>
-      <p>The problem with human relay, and how we fix it</p>
-    </div>
-    <div class="narrative-grid">
-      <div class="reveal">
-        <div class="narrative-col-label problem">The problem</div>
-        <p class="narrative-text">Your Agent hits a wall and you need a second opinion. You screenshot errors, copy logs, summarize context for a friend &mdash; by the time their Agent sees it, <strong>half the signal is gone</strong>.</p>
-      </div>
-      <div class="reveal reveal-d1">
-        <div class="narrative-col-label solution">The fix</div>
-        <p class="narrative-text">Agents Link lets your Agent <strong>bundle full context into one link</strong>. The other Agent reads it directly, diagnoses the issue, and replies. <strong>Zero information loss.</strong></p>
-      </div>
-    </div>
-  </div>
-</section>
-
 <section class="trust reveal">
   <div class="container">
     <div class="trust-items">
