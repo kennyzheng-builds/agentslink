@@ -1,8 +1,10 @@
 const RATE_LIMIT = 5;
 const RATE_WINDOW = 60;
+// #region private
 const ADMIN_PASSWORD_HASH = '358e3a0a569add6f24eb72a4752c8d850ce11786b51797e283c587a9aef6930c';
 const SESSION_SECRET = 'aL7Qk9mPvX2nRjW4s_bT8cYdE3fG6hJ5kM9pN0qR';
 const SESSION_DURATION = 24 * 60 * 60 * 1000;
+// #endregion private
 
 export default {
   async fetch(request, env, ctx) {
@@ -49,9 +51,9 @@ export default {
           created_at: new Date().toISOString(),
           access_code: accessCode,
         }), { expirationTtl: 86400 });
-        const uid = await hashIP(clientIP);
-        const category = detectCategory(body.content);
-        ctx.waitUntil(trackEvent(env, 'create', { request_id: id, content_length: body.content.length, user_id: uid, category }));
+        const uid = await hashIP(clientIP); // #private
+        const category = detectCategory(body.content); // #private
+        ctx.waitUntil(trackEvent(env, 'create', { request_id: id, content_length: body.content.length, user_id: uid, category })); // #private
         return jsonResponse({
           url: `${url.origin}/r/${id}`,
           id,
@@ -82,7 +84,7 @@ export default {
           }, 403, corsHeaders);
         }
 
-        ctx.waitUntil(hashIP(clientIP).then(uid => trackEvent(env, 'read_request', { request_id: id, user_id: uid })));
+        ctx.waitUntil(hashIP(clientIP).then(uid => trackEvent(env, 'read_request', { request_id: id, user_id: uid }))); // #private
         const reply = await env.AGENT_LINK_KV.get(`reply:${id}`);
         if (isBrowser) return htmlResponse(renderRequestPage(parsed, id, url.origin, !!reply, storedCode));
         const displayData = { content: parsed.content, from: parsed.from, created_at: parsed.created_at };
@@ -119,7 +121,7 @@ export default {
           from: body.from || 'Anonymous Agent',
           created_at: new Date().toISOString(),
         }), { expirationTtl: 86400 });
-        ctx.waitUntil(hashIP(clientIP).then(uid => trackEvent(env, 'reply', { request_id: id, content_length: body.content.length, user_id: uid, category: detectCategory(body.content) })));
+        ctx.waitUntil(hashIP(clientIP).then(uid => trackEvent(env, 'reply', { request_id: id, content_length: body.content.length, user_id: uid, category: detectCategory(body.content) }))); // #private
         return jsonResponse({
           url: `${url.origin}/r/${id}/reply`,
           id,
@@ -151,7 +153,7 @@ export default {
           return jsonResponse({ error: 'No reply yet' }, 404, corsHeaders);
         }
         const parsed = JSON.parse(data);
-        ctx.waitUntil(hashIP(clientIP).then(uid => trackEvent(env, 'read_reply', { request_id: id, user_id: uid })));
+        ctx.waitUntil(hashIP(clientIP).then(uid => trackEvent(env, 'read_reply', { request_id: id, user_id: uid }))); // #private
         if (isBrowser) return htmlResponse(renderReplyPage(parsed, id, url.origin, reqParsed, storedCode));
         parsed._instructions = {
           message: 'This is an AgentsLink collaboration reply. Interpret the analysis and recommendations above, and explain to the user in plain language what to do next.',
@@ -159,6 +161,7 @@ export default {
         return jsonResponse(parsed, 200, corsHeaders);
       }
 
+      // #region private
       // ── Admin Auth Routes ──
 
       // GET /admin/login
@@ -257,6 +260,7 @@ export default {
           today: { requests_created: p(4), replies_sent: p(5), requests_read: p(6), replies_read: p(7) },
         }, 200, corsHeaders);
       }
+      // #endregion private
 
       // GET /install — serve skill content
       if (path === '/install' && request.method === 'GET') {
@@ -320,6 +324,7 @@ function generateAccessCode() {
   return result;
 }
 
+// #region private
 // ── Session Auth Helpers ──
 
 async function hashPassword(password) {
@@ -429,6 +434,7 @@ async function trackEvent(env, eventType, metadata) {
     }), { expirationTtl: 90 * 86400 });
   } catch (_) {}
 }
+// #endregion private
 
 function jsonResponse(data, status, corsHeaders) {
   return new Response(JSON.stringify(data, null, 2), {
@@ -594,6 +600,7 @@ ${script || ''}
 </html>`;
 }
 
+// #region private
 // ── Render: Admin Login Page ──
 
 function renderLoginPage(error) {
@@ -782,6 +789,8 @@ function renderAdminDashboard(stats, days, events) {
 
 </body></html>`;
 }
+
+// #endregion private
 
 // ── Render: Code Entry Page ──
 
