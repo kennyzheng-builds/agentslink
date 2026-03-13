@@ -1,0 +1,35 @@
+name: Sync to Public Repo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build public version
+        run: node scripts/build-public.js
+
+      - name: Push to public repo
+        env:
+          PUBLIC_REPO_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+        run: |
+          cd dist/public
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Sync from private repo ($(date -u +%Y-%m-%d))"
+          git branch -M main
+          git remote add public https://x-access-token:${PUBLIC_REPO_TOKEN}@github.com/kennyzheng-builds/agentslink.git
+          git push public main --force
