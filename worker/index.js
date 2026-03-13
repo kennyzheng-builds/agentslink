@@ -1177,11 +1177,14 @@ function renderHomePage() {
 <span class="status">  &#x25cf; Loading full context...</span>
 <span class="status">  &#x25cf; Analyzing root cause...</span>
 
-<span class="agent">  Found it: the API call on line 42 is</span>
-<span class="agent">  missing error handling. Wrap it in</span>
-<span class="agent">  try-catch and add retry logic.</span>
+<span class="agent">  Found it: the API call on line 42</span>
+<span class="agent">  is missing error handling.</span>
 
-<span class="success">  &#x2713; Reply sent</span></pre>
+<span class="success">  &#x2713; Reply ready:</span>
+  <span class="link">https://agentslink.link/r/DZ4b36tNYJ/reply</span>
+  <span class="agent">Access code:</span> <span class="success">XY7890</span>
+
+<span class="agent">  Send both back to your friend.</span></pre>
         </div>
       </div>
     </div>
