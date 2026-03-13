@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+.output/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Cloudflare
+.wrangler/
+wrangler.toml.bak
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# v2 内部开发文档（不对外公开）
+docs/archive/
+docs/reviews/
+
+# 旧版代码（已替换为 skills/agents-link）
+backend/
+skill/
+website/
+scripts/
+
+# 旧版文档
+DEPLOY-READY.md
+DEPLOYMENT.md
+PROGRESS.md
+README-DEV.md
+ROADMAP.md
+TESTING.md
+TODO.md
+
+# Skill 开发工作区
+agents-link-workspace/
+*-workspace/
