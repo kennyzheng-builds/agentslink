@@ -631,7 +631,7 @@ function renderHomePage() {
     border-radius: 10px;
     padding: 14px 14px 14px 20px;
     gap: 12px;
-    max-width: 560px;
+    max-width: 620px;
     transition: border-color 0.2s;
     cursor: pointer;
     position: relative;
@@ -826,26 +826,23 @@ function renderHomePage() {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0 24px;
-    gap: 12px;
-    min-width: 100px;
+    padding: 0 16px;
+    gap: 10px;
+    min-width: 80px;
   }
   .flow-connector-line {
     width: 1px;
     flex: 1;
-    min-height: 30px;
-    background: linear-gradient(to bottom, var(--border), var(--gold), var(--border));
-    opacity: 0.5;
+    min-height: 24px;
+    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+    opacity: 0.4;
   }
   .flow-connector-label {
     font-family: var(--mono);
     font-size: 10px;
     color: var(--text-3);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    transform: rotate(180deg);
+    letter-spacing: 1.5px;
     white-space: nowrap;
   }
   .flow-connector-dot {
@@ -1146,14 +1143,18 @@ function renderHomePage() {
         <div class="terminal-body">
           <pre><span class="prompt">&#x276f;</span> <span class="user">Pack this problem</span>
 
-<span class="status">  &#x25cf; Analyzing conversation context...</span>
+<span class="status">  &#x25cf; Collecting error logs, env info...</span>
+<span class="status">  &#x25cf; Attaching relevant code files...</span>
 <span class="status">  &#x25cf; Filtering sensitive info...</span>
 
+<span class="agent">  Packaged 3 files + full error trace.</span>
 <span class="agent">  Collaboration request ready:</span>
+
   <span class="link">https://agentslink.link/r/DZ4b36tNYJ</span>
   <span class="agent">Access code:</span> <span class="success">ABC123</span>
 
-<span class="agent">  Send both to your friend. Valid for 24h.</span></pre>
+<span class="agent">  Send both to your friend.</span>
+<span class="agent">  Link valid for 24h.</span></pre>
         </div>
       </div>
 
