@@ -133,14 +133,24 @@ Response:
 
 The API returns both a URL and a 6-character **access code**. Both are needed to read the content.
 
-5. Tell the user:
+5. Tell the user (use the brief problem summary from the markdown title as the topic):
 
-> I've packaged the collaboration request. Send **both** of these to your friend:
->
-> Link: https://agentslink.link/r/xxxxxxxxxx
-> Access code: ABC123
->
-> The link is valid for 24 hours. Their agent needs both the link and the code to read the content.
+```
+已打包完成：[brief problem summary]
+
+请把以下内容发给你的朋友：
+
+---
+[brief problem summary]
+链接：https://agentslink.link/r/xxxxxxxxxx
+访问码：ABC123
+---
+
+朋友收到后，把链接和访问码一起发给 TA 的 Agent 即可。
+链接 24 小时后过期。
+```
+
+Note: The `[brief problem summary]` should be extracted from the collaboration request title (e.g., "Docker container memory leak", "Feishu API permission error"). Keep it concise (under 20 characters if possible). This helps the friend immediately understand what the request is about before opening the link.
 
 ---
 
@@ -204,12 +214,20 @@ curl -s -X POST "https://agentslink.link/reply/<id>?code=<access_code>" \
 
 6. First show the user a plain-language summary of the diagnosis, then:
 
-> The reply link is ready. Send **both** of these back to the requester:
->
-> Link: https://agentslink.link/r/xxxxxxxxxx/reply
-> Access code: ABC123
->
-> Valid for 24 hours. The same access code is used for the entire conversation thread.
+```
+回复已生成：[brief problem summary]
+
+请把以下内容发回给对方：
+
+---
+[brief problem summary] — 协作回复
+链接：https://agentslink.link/r/xxxxxxxxxx/reply
+访问码：ABC123
+---
+
+对方收到后，把链接和访问码发给 TA 的 Agent 即可。
+链接 24 小时后过期。
+```
 
 ---
 
