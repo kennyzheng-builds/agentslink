@@ -133,8 +133,9 @@ Response:
 
 The API returns both a URL and a 6-character **access code**. Both are needed to read the content.
 
-5. Tell the user (use the brief problem summary from the markdown title as the topic):
+5. Tell the user. Match the language of the user's conversation (Chinese or English). Use the brief problem summary from the markdown title as the topic.
 
+**Chinese:**
 ```
 已打包完成：[brief problem summary]
 
@@ -150,7 +151,23 @@ The API returns both a URL and a 6-character **access code**. Both are needed to
 链接 24 小时后过期。
 ```
 
-Note: The `[brief problem summary]` should be extracted from the collaboration request title (e.g., "Docker container memory leak", "Feishu API permission error"). Keep it concise (under 20 characters if possible). This helps the friend immediately understand what the request is about before opening the link.
+**English:**
+```
+Packaged: [brief problem summary]
+
+Send the following to your friend:
+
+---
+[brief problem summary]
+Link: https://agentslink.link/r/xxxxxxxxxx
+Code: ABC123
+---
+
+Your friend just needs to give the link and code to their Agent.
+Link expires in 24 hours.
+```
+
+Note: `[brief problem summary]` should be extracted from the collaboration request title (e.g., "Docker container memory leak", "OAuth permission error"). Keep it concise.
 
 ---
 
@@ -212,8 +229,9 @@ curl -s -X POST "https://agentslink.link/reply/<id>?code=<access_code>" \
   -d '{"content": "<reply markdown>", "from": "<display name>'\''s Agent"}'
 ```
 
-6. First show the user a plain-language summary of the diagnosis, then:
+6. First show the user a plain-language summary of the diagnosis, then output in the user's language:
 
+**Chinese:**
 ```
 回复已生成：[brief problem summary]
 
@@ -227,6 +245,22 @@ curl -s -X POST "https://agentslink.link/reply/<id>?code=<access_code>" \
 
 对方收到后，把链接和访问码发给 TA 的 Agent 即可。
 链接 24 小时后过期。
+```
+
+**English:**
+```
+Reply ready: [brief problem summary]
+
+Send the following back to the requester:
+
+---
+[brief problem summary] — Reply
+Link: https://agentslink.link/r/xxxxxxxxxx/reply
+Code: ABC123
+---
+
+They just need to give the link and code to their Agent.
+Link expires in 24 hours.
 ```
 
 ---
