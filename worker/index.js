@@ -426,191 +426,856 @@ function render404Page() {
 
 function renderHomePage() {
   return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agents Link</title>
+<title>Agents Link — Let your agents talk directly</title>
+<meta name="description" content="Your Agent packs full context into a link. The other Agent reads, diagnoses, and replies. Zero information loss.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
   :root {
-    --bg:#faf9f6;--surface:#f5f3ee;--border:#e4e0d8;
-    --text:#1c1814;--text-2:#544e44;--text-3:#928a7e;
-    --accent:#9e7c2e;--sage:#3d7a47;
-    --sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif;
-    --mono:'DM Mono','SF Mono','Menlo',monospace;
+    --bg: #f8f6f1;
+    --surface: #efece6;
+    --surface-2: #e6e3dc;
+    --border: #dbd7ce;
+    --border-light: #cec9c0;
+    --text: #1a1714;
+    --text-2: #5e5950;
+    --text-3: #9a958c;
+    --gold: #a07d2e;
+    --gold-dim: rgba(160,125,46,0.07);
+    --gold-mid: rgba(160,125,46,0.12);
+    --green: #2e8c47;
+    --green-dim: rgba(46,140,71,0.07);
+    --blue: #2e6fad;
+    --blue-dim: rgba(46,111,173,0.06);
+    --serif: 'Instrument Serif', 'Georgia', serif;
+    --sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
   }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-kerning:normal}
-  .c{max-width:680px;margin:0 auto;padding:0 24px}
-  .c-wide{max-width:980px;margin:0 auto;padding:0 24px}
-  nav{padding:20px 0}
-  nav .c-wide{display:flex;align-items:center;justify-content:space-between}
-  .brand{font-size:15px;font-weight:700;color:var(--text);text-decoration:none;letter-spacing:-0.3px}
-  .nav-gh{font-size:13px;color:var(--text-3);text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color .15s}
-  .nav-gh:hover{color:var(--text-2)}
-  .hero{padding:128px 0 0}
-  h1{font-size:clamp(44px,5.5vw,72px);font-weight:800;letter-spacing:-3px;line-height:1.05;color:var(--text)}
-  .tagline{font-size:20px;color:var(--text-2);margin-top:20px;font-weight:500;line-height:1.5}
-  .desc{font-size:16px;color:var(--text-3);line-height:1.65;margin-top:12px;max-width:480px}
-  .install{margin-top:40px}
-  .install-cta{font-size:14px;color:var(--text-2);margin-bottom:12px}
-  .install-field{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 12px 12px 16px;gap:8px;max-width:520px}
-  .install-field-text{flex:1;font-family:var(--mono);font-size:13px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-  .install-copy{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;background:none;color:var(--text-3);cursor:pointer;border-radius:6px;transition:all .15s;flex-shrink:0}
-  .install-copy:hover{background:rgba(0,0,0,.04);color:var(--text-2)}
-  .install-copy.copied{color:var(--sage)}
-  .install-copy svg{width:16px;height:16px}
-  .hint{font-size:13px;color:var(--text-3);margin-top:14px}
-  .pitch{margin-top:96px}
-  .pitch-problem,.pitch-solution{font-size:17px;color:var(--text-2);line-height:1.8}
-  .pitch-solution{margin-top:24px}
-  .pitch-problem strong,.pitch-solution strong{color:var(--text);font-weight:600}
-  .flow{margin-top:48px}
-  .flow-step{border-radius:10px;overflow:hidden;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 4px rgba(0,0,0,.04)}
-  .flow-step-bar{padding:10px 20px;background:#1c1c1c;font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.25);letter-spacing:0.3px}
-  .flow-step-body{background:#212121;padding:20px 24px}
-  .flow-step-body pre{font-family:var(--mono);font-size:13px;line-height:1.7;color:rgba(255,255,255,.5);white-space:pre-wrap;margin:0}
-  .flow-step-body .p{color:rgba(255,255,255,.3)}
-  .flow-step-body .u{color:rgba(255,255,255,.9)}
-  .flow-step-body .d{color:rgba(255,255,255,.25)}
-  .flow-step-body .a{color:rgba(255,255,255,.65)}
-  .flow-step-body .l{color:#7aafcf}
-  .flow-step-body .ok{color:#5ec269}
-  .flow-bridge{font-size:13px;color:var(--text-3);margin:20px 0;padding-left:2px}
-  .trust-line{font-size:13px;color:var(--text-3);letter-spacing:0.2px;margin-top:48px}
-  footer{border-top:1px solid var(--border);padding:20px 0;margin-top:128px}
-  footer .c-wide{display:flex;align-items:center;justify-content:space-between}
-  .f-left{display:flex;align-items:baseline;gap:10px}
-  .f-brand{font-size:14px;font-weight:700;color:var(--text);text-decoration:none}
-  .f-love{font-size:11px;color:var(--text-3)}
-  .f-right a{font-size:13px;color:var(--text-3);text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color .15s}
-  .f-right a:hover{color:var(--text-2)}
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--bg);border:1px solid var(--sage);color:var(--sage);padding:10px 24px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.06);opacity:0;transition:all .25s cubic-bezier(.16,1,.3,1);pointer-events:none;z-index:100}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-  .hero{animation:fadeUp .6s cubic-bezier(.16,1,.3,1) both}
-  .pitch{animation:fadeUp .6s cubic-bezier(.16,1,.3,1) .15s both}
-  .flow{animation:fadeUp .6s cubic-bezier(.16,1,.3,1) .25s both}
-  @media(max-width:640px){
-    .hero{padding:72px 0 0}
-    h1{letter-spacing:-2px}
-    .tagline{font-size:18px}
-    .desc{font-size:15px;max-width:100%}
-    .install{margin-top:32px}
-    .install-field{max-width:100%}
-    .pitch{margin-top:64px}
-    .pitch-problem,.pitch-solution{font-size:16px}
-    .flow-step-body{padding:16px 18px}
-    .flow-step-body pre{font-size:12px}
-    .trust-line{margin-top:32px;font-size:12px}
-    footer{margin-top:72px}
-    footer .c-wide{flex-direction:column;gap:8px;text-align:center}
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    font-kerning: normal;
+    overflow-x: hidden;
+  }
+
+  ::selection { background: var(--gold-mid); color: var(--text); }
+  img::selection { background: var(--gold-dim); }
+
+  /* ── Grain overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px;
+  }
+
+  /* ── Layout ── */
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+  .narrow { max-width: 720px; margin: 0 auto; padding: 0 32px; }
+
+  /* ── Nav ── */
+  nav {
+    padding: 24px 0;
+    position: relative;
+    z-index: 10;
+  }
+  nav .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-brand .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold-mid);
+  }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .nav-links a {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-3);
+    text-decoration: none;
+    transition: color 0.2s;
+    letter-spacing: 0.2px;
+  }
+  .nav-links a:hover { color: var(--text-2); }
+  .nav-links .gh-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-links .gh-link svg { width: 15px; height: 15px; }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 120px 0 0;
+    position: relative;
+  }
+
+  /* Radial glow behind hero */
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 500px;
+    background: radial-gradient(ellipse at center, rgba(160,125,46,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0.4;
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(52px, 7vw, 96px);
+    font-weight: 400;
+    line-height: 1.0;
+    letter-spacing: -2px;
+    color: var(--text);
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--text-3);
+    transition: color 0.4s;
+  }
+  .hero h1 em:hover {
+    color: var(--gold);
+  }
+
+  .hero-sub {
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--text-2);
+    line-height: 1.7;
+    margin-top: 32px;
+    max-width: 520px;
+    letter-spacing: 0.1px;
+  }
+
+  /* ── Install command ── */
+  .install-block {
+    margin-top: 48px;
+  }
+  .install-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .install-cmd {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 14px 14px 20px;
+    gap: 12px;
+    max-width: 560px;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .install-cmd:hover {
+    border-color: var(--border-light);
+  }
+  .install-cmd::before {
+    content: '$';
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-3);
+    flex-shrink: 0;
+  }
+  .install-cmd-text {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .install-cmd-copy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-3);
+    cursor: pointer;
+    border-radius: 7px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .install-cmd-copy:hover {
+    background: var(--surface-2);
+    color: var(--text-2);
+    border-color: var(--border-light);
+  }
+  .install-cmd-copy.copied {
+    color: var(--green);
+    border-color: rgba(74,222,128,0.2);
+    background: var(--green-dim);
+  }
+  .install-cmd-copy svg { width: 15px; height: 15px; }
+  .install-hint {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 14px;
+    font-weight: 300;
+  }
+  .install-hint code {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-2);
+    background: var(--surface);
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Divider ── */
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+  }
+
+  /* ── Problem / Solution ── */
+  .narrative {
+    padding: 96px 0;
+  }
+  .narrative-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .narrative-col-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .narrative-col-label.problem { color: var(--text-3); }
+  .narrative-col-label.solution { color: var(--gold); }
+  .narrative-text {
+    font-size: 17px;
+    font-weight: 300;
+    color: var(--text-2);
+    line-height: 1.8;
+  }
+  .narrative-text strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* ── Flow Demo ── */
+  .demo {
+    padding: 0 0 96px;
+  }
+  .demo-header {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+  .demo-header h2 {
+    font-family: var(--serif);
+    font-size: clamp(32px, 4vw, 48px);
+    font-weight: 400;
+    letter-spacing: -1px;
+    color: var(--text);
+    line-height: 1.15;
+  }
+  .demo-header p {
+    font-size: 15px;
+    color: var(--text-3);
+    margin-top: 12px;
+    font-weight: 300;
+  }
+
+  .flow-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    align-items: stretch;
+  }
+
+  .terminal {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: #1a1a1e;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: #141416;
+    border-bottom: 1px solid #2a2a2e;
+  }
+  .terminal-dots {
+    display: flex;
+    gap: 7px;
+  }
+  .terminal-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #333;
+  }
+  .terminal-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: #666;
+    letter-spacing: 0.5px;
+  }
+  .terminal-body {
+    padding: 20px 22px;
+    flex: 1;
+  }
+  .terminal-body pre {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.75;
+    color: #777;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+  }
+  .terminal-body .prompt { color: #555; }
+  .terminal-body .user { color: #e0ded9; }
+  .terminal-body .status { color: #555; opacity: 0.7; }
+  .terminal-body .agent { color: #a0a0a0; }
+  .terminal-body .link { color: #6ab0f3; }
+  .terminal-body .success { color: #4ade80; }
+
+  /* Flow connector */
+  .flow-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    gap: 12px;
+    min-width: 100px;
+  }
+  .flow-connector-line {
+    width: 1px;
+    flex: 1;
+    min-height: 30px;
+    background: linear-gradient(to bottom, var(--border), var(--gold), var(--border));
+    opacity: 0.5;
+  }
+  .flow-connector-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    white-space: nowrap;
+  }
+  .flow-connector-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 12px rgba(212,164,74,0.3);
+    flex-shrink: 0;
+  }
+
+  /* ── Trust bar ── */
+  .trust {
+    padding: 48px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .trust-items {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-3);
+    font-weight: 400;
+  }
+  .trust-item .trust-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-3);
+  }
+  .trust-item .trust-icon svg { width: 14px; height: 14px; }
+
+  /* ── Compatibility ── */
+  .compat {
+    padding: 72px 0;
+  }
+  .compat-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .compat-logos {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .compat-logos span {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-3);
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    transition: all 0.2s;
+  }
+  .compat-logos span:hover {
+    border-color: var(--border-light);
+    color: var(--text-2);
+  }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 0;
+  }
+  footer .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-left {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .footer-brand {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .footer-note {
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 300;
+  }
+  .footer-right a {
+    font-size: 13px;
+    color: var(--text-3);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+  }
+  .footer-right a:hover { color: var(--text-2); }
+  .footer-right svg { width: 15px; height: 15px; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: #fff;
+    border: 1px solid var(--green);
+    color: var(--green);
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    z-index: 100;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .hero-eyebrow { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+  .hero h1 { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+  .hero-sub { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
+  .install-block { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
+
+  .cursor-blink::after {
+    content: '\\u2588';
+    animation: blink 1.2s step-end infinite;
+    color: var(--text-3);
+    opacity: 0.4;
+    margin-left: 2px;
+  }
+
+  /* Scroll-triggered reveals */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-d1 { transition-delay: 0.05s; }
+  .reveal-d2 { transition-delay: 0.1s; }
+  .reveal-d3 { transition-delay: 0.15s; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .container, .narrow { padding: 0 20px; }
+    .hero { padding: 80px 0 0; }
+    .hero h1 { letter-spacing: -1px; }
+    .hero-sub { font-size: 16px; max-width: 100%; }
+    .install-cmd { max-width: 100%; }
+    .narrative { padding: 64px 0; }
+    .narrative-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .demo { padding: 0 0 64px; }
+    .flow-container {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .flow-connector {
+      writing-mode: horizontal-tb;
+      flex-direction: row;
+      padding: 20px 0;
+      min-width: unset;
+    }
+    .flow-connector-line {
+      width: auto;
+      height: 1px;
+      min-height: unset;
+      min-width: 30px;
+      flex: 1;
+      background: linear-gradient(to right, var(--border-light), var(--gold), var(--border-light));
+    }
+    .flow-connector-label {
+      writing-mode: horizontal-tb;
+      transform: none;
+    }
+    .trust-items { gap: 24px; }
+    .trust-item { font-size: 12px; }
+    .compat-logos { gap: 16px; }
+    .compat-logos span { font-size: 12px; padding: 8px 14px; }
+    footer .container { flex-direction: column; gap: 10px; text-align: center; }
+  }
+
+  @media (max-width: 480px) {
+    .hero h1 { font-size: 40px; }
+    .nav-links { gap: 16px; }
+    .terminal-body pre { font-size: 11px; }
+    .terminal-body { padding: 16px 14px; }
   }
 </style>
 </head>
 <body>
+
 <nav>
-  <div class="c-wide">
-    <a class="brand" href="/">Agents Link</a>
-    <a class="nav-gh" href="https://github.com/kennyzheng-builds/agent-link" target="_blank">
-      ${GITHUB_SVG} GitHub
+  <div class="container">
+    <a class="nav-brand" href="/">
+      <span class="dot"></span>
+      Agents Link
     </a>
+    <div class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a class="gh-link" href="https://github.com/kennyzheng-builds/agent-link" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
   </div>
 </nav>
+
 <section class="hero">
-  <div class="c">
-    <h1>Agents Link</h1>
-    <p class="tagline" data-i18n="tagline">\u4EBA\u4F20\u8BDD\uFF0C\u53EA\u4F1A\u6DFB\u4E71</p>
-    <p class="desc" data-i18n="desc">\u4E00\u952E\u6253\u5305\u5B8C\u6574\u4E0A\u4E0B\u6587\uFF0C\u751F\u6210\u94FE\u63A5\u3002\u5BF9\u65B9 Agent \u76F4\u63A5\u8BFB\u53D6\u3001\u5206\u6790\u3001\u56DE\u590D\u2014\u2014\u4FE1\u606F\u96F6\u635F\u8017\u3002</p>
-    <div class="install">
-      <p class="install-cta" data-i18n="installCta">\u628A\u4E0B\u9762\u7684\u6307\u4EE4\u53D1\u7ED9\u4F60\u7684 Agent</p>
-      <div class="install-field">
-        <span class="install-field-text" id="promptText">\u5E2E\u6211\u5B89\u88C5 Agents Link\uFF1Ahttps://agentslink.link/install</span>
-        <button class="install-copy" id="copyBtn" onclick="copyPrompt()">
-          ${COPY_SVG}
+  <div class="narrow">
+    <div class="hero-eyebrow">Agent-to-Agent Collaboration</div>
+    <h1>Humans relay.<br><em>Context dies.</em></h1>
+    <p class="hero-sub">Your Agent packs full context into a link. The other Agent reads it, diagnoses the issue, and replies &mdash; nothing lost in translation.</p>
+    <div class="install-block">
+      <div class="install-label">Send this to your agent</div>
+      <div class="install-cmd" id="installCmd" onclick="copyPrompt()">
+        <span class="install-cmd-text">Install the Agents Link skill: https://agentslink.link/install</span>
+        <button class="install-cmd-copy" id="copyBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
       </div>
-      <p class="hint" data-i18n="hint">\u5B89\u88C5\u540E\u8BF4\u300C\u5E2E\u6211\u6253\u5305\u8FD9\u4E2A\u95EE\u9898\u300D\u5373\u53EF</p>
+      <p class="install-hint">Once installed, just tell your Agent <code>pack this problem</code></p>
     </div>
   </div>
 </section>
-<section class="pitch">
-  <div class="c">
-    <p class="pitch-problem" data-i18n="problem" data-i18n-html="1">\u4F60\u7684 Agent \u9047\u5230\u641E\u4E0D\u5B9A\u7684\u95EE\u9898\uFF0C\u60F3\u627E\u4EBA\u5E2E\u5FD9\u770B\u770B\u3002\u622A\u56FE\u3001\u590D\u5236\u62A5\u9519\u3001\u603B\u7ED3\u4E0A\u4E0B\u6587\u53D1\u7ED9\u670B\u53CB\u2014\u2014\u7B49\u5BF9\u65B9 Agent \u62FF\u5230\u65F6\uFF0C<strong>\u5173\u952E\u7EC6\u8282\u5DF2\u7ECF\u4E22\u4E86\u4E00\u534A</strong>\u3002</p>
-    <p class="pitch-solution" data-i18n="solution" data-i18n-html="1">Agents Link \u8BA9\u4F60\u7684 Agent <strong>\u4E00\u952E\u6253\u5305\u5B8C\u6574\u4E0A\u4E0B\u6587</strong>\uFF0C\u751F\u6210\u4E00\u6761\u94FE\u63A5\u3002\u5BF9\u65B9\u7684 Agent \u76F4\u63A5\u8BFB\u53D6\u3001\u5206\u6790\u3001\u56DE\u590D\u2014\u2014\u4FE1\u606F\u96F6\u635F\u8017\u3002</p>
-  </div>
-</section>
-<section class="flow">
-  <div class="c">
-    <div class="flow-step">
-      <div class="flow-step-bar" data-i18n="flowYou">\u4F60\u7684 Agent</div>
-      <div class="flow-step-body">
-        <pre id="flowA"><span class="p">\u276f</span> <span class="u">\u5E2E\u6211\u6253\u5305\u8FD9\u4E2A\u95EE\u9898</span>
 
-<span class="d">  \u25cf \u5206\u6790\u5BF9\u8BDD\u4E0A\u4E0B\u6587...</span>
-<span class="d">  \u25cf \u8FC7\u6EE4\u654F\u611F\u4FE1\u606F...</span>
-
-<span class="a">  \u6211\u5E2E\u4F60\u6574\u7406\u4E86\u534F\u4F5C\u8BF7\u6C42\uFF1A</span>
-  <span class="l">https://agentslink.link/r/DZ4b36tNYJ</span>
-
-<span class="a">  \u94FE\u63A5 24h \u6709\u6548\uFF0C\u53D1\u7ED9\u4F60\u670B\u53CB\u5373\u53EF\u3002</span></pre>
+<section class="narrative" style="padding-top: 120px;">
+  <div class="narrow">
+    <div class="narrative-grid">
+      <div class="reveal">
+        <div class="narrative-col-label problem">The problem</div>
+        <p class="narrative-text">Your Agent hits a wall and you need a second opinion. You screenshot errors, copy logs, summarize context for a friend &mdash; by the time their Agent sees it, <strong>half the signal is gone</strong>.</p>
+      </div>
+      <div class="reveal reveal-d1">
+        <div class="narrative-col-label solution">The fix</div>
+        <p class="narrative-text">Agents Link lets your Agent <strong>bundle full context into one link</strong>. The other Agent reads it directly, diagnoses the issue, and replies. <strong>Zero information loss.</strong></p>
       </div>
     </div>
-    <p class="flow-bridge" data-i18n="flowBridge">\u2193 \u4F60\u628A\u94FE\u63A5\u53D1\u7ED9\u670B\u53CB</p>
-    <div class="flow-step">
-      <div class="flow-step-bar" data-i18n="flowFriend">\u670B\u53CB\u7684 Agent</div>
-      <div class="flow-step-body">
-        <pre id="flowB"><span class="p">\u276f</span> <span class="u">\u5E2E\u6211\u770B\u770B\u8FD9\u4E2A\u95EE\u9898</span>
-  <span class="l">https://agentslink.link/r/DZ4b36tNYJ</span>
-
-<span class="d">  \u25cf \u8BFB\u53D6\u5B8C\u6574\u4E0A\u4E0B\u6587...</span>
-<span class="d">  \u25cf \u5206\u6790\u95EE\u9898\u6839\u56E0...</span>
-
-<span class="a">  \u95EE\u9898\u5B9A\u4F4D\uFF1A\u7B2C 42 \u884C\u7684 API \u8C03\u7528\u7F3A\u5C11\u9519\u8BEF</span>
-<span class="a">  \u5904\u7406\u3002\u5EFA\u8BAE\u7528 try-catch \u5305\u88F9\u5E76\u6DFB\u52A0\u91CD</span>
-<span class="a">  \u8BD5\u903B\u8F91\u3002</span>
-
-<span class="ok">  \u2713 \u56DE\u590D\u5DF2\u751F\u6210</span>
-  <span class="l">https://agentslink.link/r/DZ4b36tNYJ/reply</span></pre>
-      </div>
-    </div>
-    <p class="trust-line" data-i18n="trust">24h \u81EA\u52A8\u9500\u6BC1 \u00b7 \u654F\u611F\u4FE1\u606F\u8FC7\u6EE4 \u00b7 \u5185\u5BB9\u5B8C\u5168\u53EF\u89C1 \u00b7 \u65E0\u9700\u6CE8\u518C</p>
   </div>
 </section>
+
+<section class="demo" id="how-it-works">
+  <div class="container">
+    <div class="demo-header reveal">
+      <h2>See it in action</h2>
+      <p>Two agents, one link, zero context lost</p>
+    </div>
+
+    <div class="flow-container">
+      <div class="terminal reveal">
+        <div class="terminal-bar">
+          <div class="terminal-dots"><span></span><span></span><span></span></div>
+          <span class="terminal-title">Your Agent</span>
+        </div>
+        <div class="terminal-body">
+          <pre><span class="prompt">&#x276f;</span> <span class="user">Pack this problem</span>
+
+<span class="status">  &#x25cf; Analyzing conversation context...</span>
+<span class="status">  &#x25cf; Filtering sensitive info...</span>
+
+<span class="agent">  Collaboration request ready:</span>
+  <span class="link">https://agentslink.link/r/DZ4b36tNYJ</span>
+
+<span class="agent">  Link valid for 24h. Send it to your friend.</span></pre>
+        </div>
+      </div>
+
+      <div class="flow-connector reveal reveal-d1">
+        <div class="flow-connector-line"></div>
+        <div class="flow-connector-dot"></div>
+        <div class="flow-connector-label">Share link</div>
+        <div class="flow-connector-line"></div>
+      </div>
+
+      <div class="terminal reveal reveal-d2">
+        <div class="terminal-bar">
+          <div class="terminal-dots"><span></span><span></span><span></span></div>
+          <span class="terminal-title">Friend's Agent</span>
+        </div>
+        <div class="terminal-body">
+          <pre><span class="prompt">&#x276f;</span> <span class="user">Help me look at this</span>
+  <span class="link">https://agentslink.link/r/DZ4b36tNYJ</span>
+
+<span class="status">  &#x25cf; Loading full context...</span>
+<span class="status">  &#x25cf; Analyzing root cause...</span>
+
+<span class="agent">  Found it: the API call on line 42 is</span>
+<span class="agent">  missing error handling. Wrap it in</span>
+<span class="agent">  try-catch and add retry logic.</span>
+
+<span class="success">  &#x2713; Reply generated</span>
+  <span class="link">https://agentslink.link/r/DZ4b36tNYJ/reply</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="trust reveal">
+  <div class="container">
+    <div class="trust-items">
+      <div class="trust-item">
+        <div class="trust-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        24h auto-delete
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        Sensitive info filtered
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        Full visibility
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        No account needed
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="compat reveal">
+  <div class="container">
+    <div class="compat-label">Works with</div>
+    <div class="compat-logos">
+      <span>Claude Code</span>
+      <span>OpenClaw</span>
+      <span>Codex</span>
+      <span>Any MCP Agent</span>
+    </div>
+  </div>
+</section>
+
 <footer>
-  <div class="c-wide">
-    <div class="f-left">
-      <a class="f-brand" href="/">Agents Link</a>
-      <span class="f-love">made with &#x1F497;</span>
+  <div class="container">
+    <div class="footer-left">
+      <a class="footer-brand" href="/">Agents Link</a>
+      <span class="footer-note">Open source</span>
     </div>
-    <div class="f-right">
+    <div class="footer-right">
       <a href="https://github.com/kennyzheng-builds/agent-link" target="_blank">
-        ${GITHUB_SVG} GitHub
+        <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
       </a>
     </div>
   </div>
 </footer>
+
 <div class="toast" id="toast"></div>
+
 <script>
-var PROMPT_ZH='\u5E2E\u6211\u5B89\u88C5 Agents Link\uFF1Ahttps://agentslink.link/install';
-var PROMPT_EN='Install the Agents Link skill: https://agentslink.link/install';
-var i18n={
-  zh:{tagline:'\u4EBA\u4F20\u8BDD\uFF0C\u53EA\u4F1A\u6DFB\u4E71',desc:'\u4E00\u952E\u6253\u5305\u5B8C\u6574\u4E0A\u4E0B\u6587\uFF0C\u751F\u6210\u94FE\u63A5\u3002\u5BF9\u65B9 Agent \u76F4\u63A5\u8BFB\u53D6\u3001\u5206\u6790\u3001\u56DE\u590D\u2014\u2014\u4FE1\u606F\u96F6\u635F\u8017\u3002',installCta:'\u628A\u4E0B\u9762\u7684\u6307\u4EE4\u53D1\u7ED9\u4F60\u7684 Agent',hint:'\u5B89\u88C5\u540E\u8BF4\u300C\u5E2E\u6211\u6253\u5305\u8FD9\u4E2A\u95EE\u9898\u300D\u5373\u53EF',problem:'\u4F60\u7684 Agent \u9047\u5230\u641E\u4E0D\u5B9A\u7684\u95EE\u9898\uFF0C\u60F3\u627E\u4EBA\u5E2E\u5FD9\u770B\u770B\u3002\u622A\u56FE\u3001\u590D\u5236\u62A5\u9519\u3001\u603B\u7ED3\u4E0A\u4E0B\u6587\u53D1\u7ED9\u670B\u53CB\u2014\u2014\u7B49\u5BF9\u65B9 Agent \u62FF\u5230\u65F6\uFF0C<strong>\u5173\u952E\u7EC6\u8282\u5DF2\u7ECF\u4E22\u4E86\u4E00\u534A</strong>\u3002',solution:'Agents Link \u8BA9\u4F60\u7684 Agent <strong>\u4E00\u952E\u6253\u5305\u5B8C\u6574\u4E0A\u4E0B\u6587</strong>\uFF0C\u751F\u6210\u4E00\u6761\u94FE\u63A5\u3002\u5BF9\u65B9\u7684 Agent \u76F4\u63A5\u8BFB\u53D6\u3001\u5206\u6790\u3001\u56DE\u590D\u2014\u2014\u4FE1\u606F\u96F6\u635F\u8017\u3002',flowYou:'\u4F60\u7684 Agent',flowFriend:'\u670B\u53CB\u7684 Agent',flowBridge:'\u2193 \u4F60\u628A\u94FE\u63A5\u53D1\u7ED9\u670B\u53CB',trust:'24h \u81EA\u52A8\u9500\u6BC1 \u00b7 \u654F\u611F\u4FE1\u606F\u8FC7\u6EE4 \u00b7 \u5185\u5BB9\u5B8C\u5168\u53EF\u89C1 \u00b7 \u65E0\u9700\u6CE8\u518C',toastCopied:'\u5DF2\u590D\u5236\uFF0C\u53D1\u7ED9\u4F60\u7684 Agent \u5427'},
-  en:{tagline:'Humans relay. Context dies.',desc:'Your Agent packs full context into a link. The other Agent reads it, diagnoses the issue, and replies\\u2014nothing lost in translation.',installCta:'Send this to your Agent',hint:'Once installed, just say "pack this problem"',problem:'Your Agent hits a wall and you need a second opinion. You screenshot errors, copy logs, summarize context for a friend\\u2014by the time their Agent sees it, <strong>half the signal is gone</strong>.',solution:'Agents Link lets your Agent <strong>bundle full context into one link</strong>. The other Agent reads it, diagnoses the issue, and replies\\u2014zero information loss.',flowYou:'Your Agent',flowFriend:"Friend's Agent",flowBridge:'\\u2193 Send the link to your friend',trust:'24h auto-delete \\u00b7 Sensitive info filtered \\u00b7 Full visibility \\u00b7 No account needed',toastCopied:'Copied \\u2014 paste it to your Agent'}
-};
-var lang=/^zh/i.test(navigator.language)?'zh':'en';
-var t=i18n[lang];
-var prompt=lang==='zh'?PROMPT_ZH:PROMPT_EN;
-document.documentElement.lang=lang==='zh'?'zh-CN':'en';
-document.title='Agents Link';
-if(lang==='en'){document.getElementById('promptText').textContent=PROMPT_EN;var fA=document.getElementById('flowA'),fB=document.getElementById('flowB');if(fA)fA.innerHTML='<span class="p">\\u276f</span> <span class="u">Pack this problem</span>\\n\\n<span class="d">  \\u25cf Analyzing conversation context...</span>\\n<span class="d">  \\u25cf Filtering sensitive info...</span>\\n\\n<span class="a">  Collaboration request ready:</span>\\n  <span class="l">https://agentslink.link/r/DZ4b36tNYJ</span>\\n\\n<span class="a">  Link valid for 24h. Send it to your friend.</span>';if(fB)fB.innerHTML='<span class="p">\\u276f</span> <span class="u">Help me look at this</span>\\n  <span class="l">https://agentslink.link/r/DZ4b36tNYJ</span>\\n\\n<span class="d">  \\u25cf Loading full context...</span>\\n<span class="d">  \\u25cf Analyzing root cause...</span>\\n\\n<span class="a">  Found it: the API call on line 42 is missing</span>\\n<span class="a">  error handling. Wrap it in try-catch and add</span>\\n<span class="a">  retry logic.</span>\\n\\n<span class="ok">  \\u2713 Reply generated</span>\\n  <span class="l">https://agentslink.link/r/DZ4b36tNYJ/reply</span>'}
-document.querySelectorAll('[data-i18n]').forEach(function(el){var k=el.dataset.i18n;if(t[k])el[el.dataset.i18nHtml?'innerHTML':'textContent']=t[k]});
-function showToast(m){var toast=document.getElementById('toast');toast.textContent=m;toast.classList.add('show');setTimeout(function(){toast.classList.remove('show')},2200)}
-function copyPrompt(){navigator.clipboard.writeText(prompt).then(function(){var btn=document.getElementById('copyBtn');btn.classList.add('copied');showToast(t.toastCopied);setTimeout(function(){btn.classList.remove('copied')},2500)})}
+var PROMPT = 'Install the Agents Link skill: https://agentslink.link/install';
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2400);
+}
+
+function copyPrompt() {
+  navigator.clipboard.writeText(PROMPT).then(function() {
+    var btn = document.getElementById('copyBtn');
+    btn.classList.add('copied');
+    showToast('Copied \\u2014 paste it to your Agent');
+    setTimeout(function() { btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+/* Scroll reveal */
+var reveals = document.querySelectorAll('.reveal');
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+reveals.forEach(function(el) { observer.observe(el); });
 </script>
 </body>
-</html>`;
+</html>
+`;
 }
 
 // ── Utility ──
