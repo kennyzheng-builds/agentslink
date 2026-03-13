@@ -49,7 +49,9 @@ export default {
           created_at: new Date().toISOString(),
           access_code: accessCode,
         }), { expirationTtl: 86400 });
-        ctx.waitUntil(trackEvent(env, 'create', { request_id: id, content_length: body.content.length }));
+        const uid = await hashIP(clientIP);
+        const category = detectCategory(body.content);
+        ctx.waitUntil(trackEvent(env, 'create', { request_id: id, content_length: body.content.length, user_id: uid, category }));
         return jsonResponse({
           url: `${url.origin}/r/${id}`,
           id,
@@ -80,7 +82,7 @@ export default {
           }, 403, corsHeaders);
         }
 
-        ctx.waitUntil(trackEvent(env, 'read_request', { request_id: id }));
+        ctx.waitUntil(hashIP(clientIP).then(uid => trackEvent(env, 'read_request', { request_id: id, user_id: uid })));
         const reply = await env.AGENT_LINK_KV.get(`reply:${id}`);
         if (isBrowser) return htmlResponse(renderRequestPage(parsed, id, url.origin, !!reply, storedCode));
         const displayData = { content: parsed.content, from: parsed.from, created_at: parsed.created_at };
@@ -117,7 +119,7 @@ export default {
           from: body.from || 'Anonymous Agent',
           created_at: new Date().toISOString(),
         }), { expirationTtl: 86400 });
-        ctx.waitUntil(trackEvent(env, 'reply', { request_id: id, content_length: body.content.length }));
+        ctx.waitUntil(hashIP(clientIP).then(uid => trackEvent(env, 'reply', { request_id: id, content_length: body.content.length, user_id: uid, category: detectCategory(body.content) })));
         return jsonResponse({
           url: `${url.origin}/r/${id}/reply`,
           id,
@@ -149,7 +151,7 @@ export default {
           return jsonResponse({ error: 'No reply yet' }, 404, corsHeaders);
         }
         const parsed = JSON.parse(data);
-        ctx.waitUntil(trackEvent(env, 'read_reply', { request_id: id }));
+        ctx.waitUntil(hashIP(clientIP).then(uid => trackEvent(env, 'read_reply', { request_id: id, user_id: uid })));
         if (isBrowser) return htmlResponse(renderReplyPage(parsed, id, url.origin, reqParsed, storedCode));
         parsed._instructions = {
           message: 'This is an AgentsLink collaboration reply. Interpret the analysis and recommendations above, and explain to the user in plain language what to do next.',
@@ -210,12 +212,13 @@ export default {
         const statKeys = [
           'stats:create:total', 'stats:reply:total', 'stats:read_request:total', 'stats:read_reply:total',
           `stats:create:${today}`, `stats:reply:${today}`, `stats:read_request:${today}`, `stats:read_reply:${today}`,
+          'stats:unique_users:total', `stats:unique_users_day:${today}`,
         ];
         const vals = await Promise.all(statKeys.map(k => env.AGENT_LINK_KV.get(k)));
         const p = i => parseInt(vals[i]) || 0;
         const stats = {
-          all_time: { requests_created: p(0), replies_sent: p(1), requests_read: p(2), replies_read: p(3) },
-          today: { requests_created: p(4), replies_sent: p(5), requests_read: p(6), replies_read: p(7) },
+          all_time: { requests_created: p(0), replies_sent: p(1), requests_read: p(2), replies_read: p(3), unique_users: p(8) },
+          today: { requests_created: p(4), replies_sent: p(5), requests_read: p(6), replies_read: p(7), unique_users: p(9) },
         };
 
         // Fetch last 7 days for chart
@@ -356,6 +359,28 @@ function getCookie(request, name) {
   return match ? match.substring(name.length + 1) : null;
 }
 
+async function hashIP(ip) {
+  const data = new TextEncoder().encode(ip + ':agentslink-salt');
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).slice(0, 4).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function detectCategory(content) {
+  if (!content) return 'other';
+  const c = content.toLowerCase();
+  if (/\b(error|bug|crash|exception|stacktrace|stack trace|traceback|failed|failure|throw|panic)\b/.test(c)) return 'bug';
+  if (/\b(deploy|ci\/cd|pipeline|docker|k8s|kubernetes|devops|nginx|server config)\b/.test(c)) return 'devops';
+  if (/\b(api|endpoint|rest|graphql|grpc|webhook|integration|sdk)\b/.test(c)) return 'api';
+  if (/\b(performance|slow|optimize|latency|memory leak|cpu|profil)\b/.test(c)) return 'perf';
+  if (/\b(refactor|review|code quality|clean up|restructur|architect)\b/.test(c)) return 'refactor';
+  if (/\b(database|sql|query|migration|schema|orm|postgres|mysql|mongo|redis)\b/.test(c)) return 'database';
+  if (/\b(auth|login|oauth|jwt|token|permission|session|security)\b/.test(c)) return 'auth';
+  if (/\b(css|style|layout|responsive|ui|ux|design|frontend|component|react|vue|html)\b/.test(c)) return 'frontend';
+  if (/\b(test|spec|jest|mocha|pytest|unittest|coverage)\b/.test(c)) return 'testing';
+  if (/\b(config|setup|install|environment|dependency|package|version)\b/.test(c)) return 'config';
+  return 'other';
+}
+
 async function trackEvent(env, eventType, metadata) {
   try {
     const now = new Date();
@@ -372,12 +397,33 @@ async function trackEvent(env, eventType, metadata) {
       env.AGENT_LINK_KV.put(dailyKey, String((parseInt(dailyVal) || 0) + 1), { expirationTtl: 90 * 86400 }),
     ]);
 
+    // Track unique users
+    const uid = metadata.user_id || 'unknown';
+    if (uid !== 'unknown') {
+      const userKey = `stats:user:${uid}`;
+      const existing = await env.AGENT_LINK_KV.get(userKey);
+      if (!existing) {
+        await env.AGENT_LINK_KV.put(userKey, '1', { expirationTtl: 90 * 86400 });
+        const ucTotal = parseInt(await env.AGENT_LINK_KV.get('stats:unique_users:total')) || 0;
+        await env.AGENT_LINK_KV.put('stats:unique_users:total', String(ucTotal + 1));
+      }
+      const ucDailyKey = `stats:unique_users:${today}:${uid}`;
+      const dailyExists = await env.AGENT_LINK_KV.get(ucDailyKey);
+      if (!dailyExists) {
+        await env.AGENT_LINK_KV.put(ucDailyKey, '1', { expirationTtl: 2 * 86400 });
+        const ucDayTotal = parseInt(await env.AGENT_LINK_KV.get(`stats:unique_users_day:${today}`)) || 0;
+        await env.AGENT_LINK_KV.put(`stats:unique_users_day:${today}`, String(ucDayTotal + 1), { expirationTtl: 90 * 86400 });
+      }
+    }
+
     // Event log — descending timestamp so newest comes first in KV list
     const descTs = String(9999999999999 - now.getTime()).padStart(13, '0');
     const logKey = `stats:event:${descTs}:${Math.random().toString(36).slice(2, 6)}`;
     await env.AGENT_LINK_KV.put(logKey, JSON.stringify({
       type: eventType,
       request_id: metadata.request_id || null,
+      user_id: uid,
+      category: metadata.category || null,
       content_length: metadata.content_length || 0,
       timestamp: now.toISOString(),
     }), { expirationTtl: 90 * 86400 });
@@ -579,13 +625,26 @@ function renderLoginPage(error) {
 
 function renderAdminDashboard(stats, days, events) {
   const daysJson = JSON.stringify(days);
+  const catColors = { bug:'#e55', api:'#2e6fad', perf:'#e89b2e', refactor:'#7c5cbf', devops:'#2e8c47', database:'#c06', auth:'#d4732e', frontend:'#3eadd4', testing:'#6abf4a', config:'#888', other:'#666' };
+  const catLabels = { bug:'Bug/Error', api:'API', perf:'Performance', refactor:'Refactor', devops:'DevOps', database:'Database', auth:'Auth', frontend:'Frontend', testing:'Testing', config:'Config', other:'Other' };
+
+  // Category breakdown from events
+  const catCounts = {};
+  events.forEach(e => { if (e.category) catCounts[e.category] = (catCounts[e.category] || 0) + 1; });
+  const catJson = JSON.stringify(catCounts);
+
   const eventsRows = events.map(e => {
     const time = new Date(e.timestamp).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false });
     const typeColors = { create:'#a07d2e', reply:'#2e8c47', read_request:'#2e6fad', read_reply:'#7c5cbf' };
     const color = typeColors[e.type] || '#888';
+    const catColor = catColors[e.category] || '#666';
+    const catLabel = catLabels[e.category] || e.category || '-';
+    const catTag = e.category ? `<span style="background:${catColor}22;color:${catColor};padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:500">${esc(catLabel)}</span>` : '<span style="color:#555">-</span>';
     return `<tr>
       <td style="color:${color};font-weight:500">${esc(e.type)}</td>
       <td><code>${esc(e.request_id || '-')}</code></td>
+      <td><code style="font-size:0.75rem;color:#999">${esc(e.user_id || '-')}</code></td>
+      <td>${catTag}</td>
       <td>${e.content_length || '-'}</td>
       <td style="color:#888">${time}</td>
     </tr>`;
@@ -625,6 +684,10 @@ function renderAdminDashboard(stats, days, events) {
 
 <div class="cards">
   <div class="card">
+    <div class="label">Unique Users</div>
+    <div class="row"><span class="total">${stats.all_time.unique_users}</span><span class="today">+${stats.today.unique_users} today</span></div>
+  </div>
+  <div class="card">
     <div class="label">Requests Created</div>
     <div class="row"><span class="total">${stats.all_time.requests_created}</span><span class="today">+${stats.today.requests_created} today</span></div>
   </div>
@@ -647,16 +710,31 @@ function renderAdminDashboard(stats, days, events) {
   <canvas id="chart"></canvas>
 </div>
 
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem">
+  <div class="section" style="margin-bottom:0">
+    <h2>Category Breakdown</h2>
+    <canvas id="catChart" style="max-height:200px"></canvas>
+  </div>
+  <div class="section" style="margin-bottom:0">
+    <h2>Use Cases</h2>
+    <div id="catList" style="display:flex;flex-wrap:wrap;gap:8px;padding-top:8px"></div>
+  </div>
+</div>
+
 <div class="section">
   <h2>Recent Events</h2>
-  ${events.length ? `<table>
-    <thead><tr><th>Type</th><th>Request ID</th><th>Size</th><th>Time</th></tr></thead>
+  ${events.length ? `<div style="overflow-x:auto"><table>
+    <thead><tr><th>Type</th><th>Request ID</th><th>User</th><th>Category</th><th>Size</th><th>Time</th></tr></thead>
     <tbody>${eventsRows}</tbody>
-  </table>` : '<div class="empty">No events recorded yet</div>'}
+  </table></div>` : '<div class="empty">No events recorded yet</div>'}
 </div>
 
 <script>
   const days = ${daysJson};
+  const catCounts = ${catJson};
+  const catColors = ${JSON.stringify(catColors)};
+  const catLabels = ${JSON.stringify(catLabels)};
+
   const ctx = document.getElementById('chart').getContext('2d');
   new Chart(ctx, {
     type: 'bar',
@@ -678,6 +756,28 @@ function renderAdminDashboard(stats, days, events) {
       }
     }
   });
+
+  // Category doughnut chart
+  const catKeys = Object.keys(catCounts).sort((a,b) => catCounts[b] - catCounts[a]);
+  if (catKeys.length > 0) {
+    new Chart(document.getElementById('catChart').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: catKeys.map(k => catLabels[k] || k),
+        datasets: [{ data: catKeys.map(k => catCounts[k]), backgroundColor: catKeys.map(k => (catColors[k] || '#666') + 'cc'), borderWidth: 0 }]
+      },
+      options: { responsive:true, plugins:{ legend:{ position:'right', labels:{ color:'#888', font:{size:11}, padding:8 } } } }
+    });
+    // Category list with counts
+    const listEl = document.getElementById('catList');
+    catKeys.forEach(k => {
+      const c = catColors[k] || '#666';
+      listEl.innerHTML += '<div style="background:'+c+'18;border:1px solid '+c+'33;color:'+c+';padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:500">'+(catLabels[k]||k)+' <span style="opacity:0.7;font-weight:400">'+catCounts[k]+'</span></div>';
+    });
+  } else {
+    document.getElementById('catChart').parentElement.innerHTML += '<div style="text-align:center;color:#666;padding:2rem">No category data yet</div>';
+    document.getElementById('catList').innerHTML = '<div style="color:#666;padding:1rem">Categories will appear as requests are created</div>';
+  }
 <\/script>
 
 </body></html>`;
