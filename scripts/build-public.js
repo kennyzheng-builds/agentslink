@@ -29,6 +29,7 @@ const EXCLUDE = new Set([
   'node_modules',
   'scripts',
   '.github',
+  'PRIVATE-NOTES.md',
 ]);
 
 function stripPrivate(source) {
