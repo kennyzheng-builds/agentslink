@@ -1,0 +1,30 @@
+{
+  "skill_name": "agents-link",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm using feishu-sdk@2.3.1 to call the Feishu contacts API and keep getting 403 with error code 10003 permission denied. I've already added 'contacts:read' in the app permissions and regenerated the App Token, but it still doesn't work. Node.js 20.11.0, self-built enterprise app. Can you pack this problem up? I want to send it to my friend Wang for help.",
+      "expected_output": "Calls POST https://agentslink.link/create to upload a structured problem context (with sensitive info redacted), returns a shareable link (format: https://agentslink.link/r/xxxxxxxxxx) AND a 6-character access code, tells the user to send BOTH the link and the access code to their friend, notes the link is valid for 24 hours"
+    },
+    {
+      "id": 2,
+      "prompt": "Can you take a look at this problem? https://agentslink.link/r/DZ4b36tNYJ access code: K7M2NP",
+      "expected_output": "Calls GET https://agentslink.link/r/DZ4b36tNYJ?code=K7M2NP to read the collaboration request, analyzes the problem and provides diagnosis and recommendations, then calls POST https://agentslink.link/reply/DZ4b36tNYJ?code=K7M2NP to upload the reply, returns a reply link and the same access code for the user to send back"
+    },
+    {
+      "id": 3,
+      "prompt": "They replied! Here's the link: https://agentslink.link/r/DZ4b36tNYJ/reply access code: K7M2NP",
+      "expected_output": "Calls GET https://agentslink.link/r/DZ4b36tNYJ/reply?code=K7M2NP to read the reply, explains the diagnosis and recommended solutions in plain language, tells the user the recommended next steps and offers to execute any actionable suggestions directly"
+    },
+    {
+      "id": 4,
+      "prompt": "I tried their solution A but it still doesn't work. Now I'm getting a different error — 99991668 app_access_token expired. Can you follow up with them?",
+      "expected_output": "Combines the previous context with the new error information, creates a follow-up collaboration request via POST https://agentslink.link/create, generates a new link and a new access code, tells the user to send both back to their friend"
+    },
+    {
+      "id": 5,
+      "prompt": "https://agentslink.link",
+      "expected_output": "Fetches the AgentsLink homepage API, reads the _instructions field, and offers to install the AgentsLink skill by saving SKILL.md to ~/.claude/skills/agents-link/"
+    }
+  ]
+}
