@@ -1,6 +1,8 @@
 const RATE_LIMIT = 5;
 const RATE_WINDOW = 60;
-const ADMIN_KEY = 'aL_s7Qk9mPvX2nRjW4';
+const ADMIN_PASSWORD_HASH = '358e3a0a569add6f24eb72a4752c8d850ce11786b51797e283c587a9aef6930c';
+const SESSION_SECRET = 'aL7Qk9mPvX2nRjW4s_bT8cYdE3fG6hJ5kM9pN0qR';
+const SESSION_DURATION = 24 * 60 * 60 * 1000;
 
 export default {
   async fetch(request, env, ctx) {
@@ -47,7 +49,7 @@ export default {
           created_at: new Date().toISOString(),
           access_code: accessCode,
         }), { expirationTtl: 86400 });
-        ctx.waitUntil(trackEvent(env, 'create', { from: body.from, content_length: body.content.length, request_id: id }));
+        ctx.waitUntil(trackEvent(env, 'create', { request_id: id, content_length: body.content.length }));
         return jsonResponse({
           url: `${url.origin}/r/${id}`,
           id,
@@ -78,7 +80,7 @@ export default {
           }, 403, corsHeaders);
         }
 
-        ctx.waitUntil(trackEvent(env, 'read_request', { from: parsed.from, request_id: id }));
+        ctx.waitUntil(trackEvent(env, 'read_request', { request_id: id }));
         const reply = await env.AGENT_LINK_KV.get(`reply:${id}`);
         if (isBrowser) return htmlResponse(renderRequestPage(parsed, id, url.origin, !!reply, storedCode));
         const displayData = { content: parsed.content, from: parsed.from, created_at: parsed.created_at };
@@ -115,7 +117,7 @@ export default {
           from: body.from || 'Anonymous Agent',
           created_at: new Date().toISOString(),
         }), { expirationTtl: 86400 });
-        ctx.waitUntil(trackEvent(env, 'reply', { from: body.from, content_length: body.content.length, request_id: id }));
+        ctx.waitUntil(trackEvent(env, 'reply', { request_id: id, content_length: body.content.length }));
         return jsonResponse({
           url: `${url.origin}/r/${id}/reply`,
           id,
@@ -147,7 +149,7 @@ export default {
           return jsonResponse({ error: 'No reply yet' }, 404, corsHeaders);
         }
         const parsed = JSON.parse(data);
-        ctx.waitUntil(trackEvent(env, 'read_reply', { from: parsed.from, request_id: id }));
+        ctx.waitUntil(trackEvent(env, 'read_reply', { request_id: id }));
         if (isBrowser) return htmlResponse(renderReplyPage(parsed, id, url.origin, reqParsed, storedCode));
         parsed._instructions = {
           message: 'This is an AgentsLink collaboration reply. Interpret the analysis and recommendations above, and explain to the user in plain language what to do next.',
@@ -155,9 +157,91 @@ export default {
         return jsonResponse(parsed, 200, corsHeaders);
       }
 
-      // GET /admin/stats — usage statistics (admin only)
-      if (path === '/admin/stats' && request.method === 'GET') {
-        if (url.searchParams.get('key') !== ADMIN_KEY) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+      // ── Admin Auth Routes ──
+
+      // GET /admin/login
+      if (path === '/admin/login' && request.method === 'GET') {
+        return htmlResponse(renderLoginPage());
+      }
+
+      // POST /admin/login
+      if (path === '/admin/login' && request.method === 'POST') {
+        const formData = await request.formData();
+        const password = formData.get('password') || '';
+        const pwHash = await hashPassword(password);
+        if (pwHash !== ADMIN_PASSWORD_HASH) {
+          return htmlResponse(renderLoginPage(true));
+        }
+        const sessionValue = await createSessionCookie();
+        return new Response(null, {
+          status: 302,
+          headers: {
+            'Location': '/admin/dashboard',
+            'Set-Cookie': `session=${sessionValue}; HttpOnly; Secure; SameSite=Strict; Path=/admin; Max-Age=${SESSION_DURATION / 1000}`,
+            'Cache-Control': 'no-store',
+          },
+        });
+      }
+
+      // GET /admin/logout
+      if (path === '/admin/logout' && request.method === 'GET') {
+        return new Response(null, {
+          status: 302,
+          headers: {
+            'Location': '/admin/login',
+            'Set-Cookie': 'session=; HttpOnly; Secure; SameSite=Strict; Path=/admin; Max-Age=0',
+            'Cache-Control': 'no-store',
+          },
+        });
+      }
+
+      // ── Protected Admin Routes ──
+      if (path.startsWith('/admin/') && path !== '/admin/login') {
+        const sessionCookie = getCookie(request, 'session');
+        const isValid = await verifySession(sessionCookie);
+        if (!isValid) {
+          return new Response(null, { status: 302, headers: { 'Location': '/admin/login' } });
+        }
+      }
+
+      // GET /admin/dashboard — visual dashboard
+      if (path === '/admin/dashboard' && request.method === 'GET') {
+        const today = new Date().toISOString().slice(0, 10);
+        const statKeys = [
+          'stats:create:total', 'stats:reply:total', 'stats:read_request:total', 'stats:read_reply:total',
+          `stats:create:${today}`, `stats:reply:${today}`, `stats:read_request:${today}`, `stats:read_reply:${today}`,
+        ];
+        const vals = await Promise.all(statKeys.map(k => env.AGENT_LINK_KV.get(k)));
+        const p = i => parseInt(vals[i]) || 0;
+        const stats = {
+          all_time: { requests_created: p(0), replies_sent: p(1), requests_read: p(2), replies_read: p(3) },
+          today: { requests_created: p(4), replies_sent: p(5), requests_read: p(6), replies_read: p(7) },
+        };
+
+        // Fetch last 7 days for chart
+        const days = [];
+        for (let d = 6; d >= 0; d--) {
+          const dt = new Date(Date.now() - d * 86400000).toISOString().slice(0, 10);
+          const [c, r, rr, rrp] = await Promise.all([
+            env.AGENT_LINK_KV.get(`stats:create:${dt}`),
+            env.AGENT_LINK_KV.get(`stats:reply:${dt}`),
+            env.AGENT_LINK_KV.get(`stats:read_request:${dt}`),
+            env.AGENT_LINK_KV.get(`stats:read_reply:${dt}`),
+          ]);
+          days.push({ date: dt, create: parseInt(c) || 0, reply: parseInt(r) || 0, read_request: parseInt(rr) || 0, read_reply: parseInt(rrp) || 0 });
+        }
+
+        // Recent events
+        const listed = await env.AGENT_LINK_KV.list({ prefix: 'stats:event:', limit: 50 });
+        const events = (await Promise.all(
+          listed.keys.map(k => env.AGENT_LINK_KV.get(k.name).then(v => v ? JSON.parse(v) : null))
+        )).filter(Boolean);
+
+        return htmlResponse(renderAdminDashboard(stats, days, events));
+      }
+
+      // GET /admin/api/stats — JSON API (session-protected)
+      if (path === '/admin/api/stats' && request.method === 'GET') {
         const today = new Date().toISOString().slice(0, 10);
         const keys = [
           'stats:create:total', 'stats:reply:total', 'stats:read_request:total', 'stats:read_reply:total',
@@ -169,17 +253,6 @@ export default {
           all_time: { requests_created: p(0), replies_sent: p(1), requests_read: p(2), replies_read: p(3) },
           today: { requests_created: p(4), replies_sent: p(5), requests_read: p(6), replies_read: p(7) },
         }, 200, corsHeaders);
-      }
-
-      // GET /admin/events — recent event log (admin only)
-      if (path === '/admin/events' && request.method === 'GET') {
-        if (url.searchParams.get('key') !== ADMIN_KEY) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
-        const limit = Math.min(parseInt(url.searchParams.get('limit')) || 50, 200);
-        const listed = await env.AGENT_LINK_KV.list({ prefix: 'stats:event:', limit });
-        const events = await Promise.all(
-          listed.keys.map(k => env.AGENT_LINK_KV.get(k.name).then(v => v ? JSON.parse(v) : null))
-        );
-        return jsonResponse({ count: events.filter(Boolean).length, events: events.filter(Boolean) }, 200, corsHeaders);
       }
 
       // GET /install — serve skill content
@@ -244,6 +317,45 @@ function generateAccessCode() {
   return result;
 }
 
+// ── Session Auth Helpers ──
+
+async function hashPassword(password) {
+  const data = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function createSessionCookie() {
+  const expiresAt = Date.now() + SESSION_DURATION;
+  const token = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
+  const data = JSON.stringify({ token, expiresAt });
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(SESSION_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = Array.from(new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data)))).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${btoa(data)}.${sig}`;
+}
+
+async function verifySession(cookieValue) {
+  if (!cookieValue) return false;
+  try {
+    const [dataB64, sig] = cookieValue.split('.');
+    if (!dataB64 || !sig) return false;
+    const data = atob(dataB64);
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(SESSION_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+    const sigBytes = new Uint8Array(sig.match(/.{2}/g).map(b => parseInt(b, 16)));
+    const valid = await crypto.subtle.verify('HMAC', key, sigBytes, new TextEncoder().encode(data));
+    if (!valid) return false;
+    const { expiresAt } = JSON.parse(data);
+    return Date.now() < expiresAt;
+  } catch (_) { return false; }
+}
+
+function getCookie(request, name) {
+  const h = request.headers.get('Cookie');
+  if (!h) return null;
+  const match = h.split(';').map(c => c.trim()).find(c => c.startsWith(`${name}=`));
+  return match ? match.substring(name.length + 1) : null;
+}
+
 async function trackEvent(env, eventType, metadata) {
   try {
     const now = new Date();
@@ -265,9 +377,8 @@ async function trackEvent(env, eventType, metadata) {
     const logKey = `stats:event:${descTs}:${Math.random().toString(36).slice(2, 6)}`;
     await env.AGENT_LINK_KV.put(logKey, JSON.stringify({
       type: eventType,
-      from: metadata.from || null,
-      content_length: metadata.content_length || 0,
       request_id: metadata.request_id || null,
+      content_length: metadata.content_length || 0,
       timestamp: now.toISOString(),
     }), { expirationTtl: 90 * 86400 });
   } catch (_) {}
@@ -435,6 +546,141 @@ ${script || ''}
 </script>
 </body>
 </html>`;
+}
+
+// ── Render: Admin Login Page ──
+
+function renderLoginPage(error) {
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Login — AgentsLink</title>
+<style>
+  body { font-family: system-ui,-apple-system,sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0; background:#0f0f0f; color:#e0e0e0; }
+  .box { background:#1a1a1a; padding:2.5rem; border-radius:12px; border:1px solid #333; width:100%; max-width:380px; }
+  h1 { margin:0 0 0.5rem; font-size:1.3rem; color:#fff; }
+  p.sub { color:#888; font-size:0.85rem; margin:0 0 1.5rem; }
+  .err { color:#e55; font-size:0.85rem; margin:0 0 1rem; padding:0.5rem 0.75rem; background:rgba(220,50,50,0.1); border-radius:6px; border:1px solid rgba(220,50,50,0.2); }
+  input { width:100%; padding:0.7rem 0.85rem; margin:0 0 1rem; border:1px solid #444; border-radius:6px; background:#111; color:#fff; font-size:0.95rem; box-sizing:border-box; outline:none; }
+  input:focus { border-color:#a07d2e; }
+  button { width:100%; padding:0.7rem; background:#a07d2e; color:#fff; border:none; border-radius:6px; font-size:0.95rem; cursor:pointer; font-weight:500; }
+  button:hover { background:#b8912e; }
+</style></head><body>
+<div class="box">
+  <h1>AgentsLink Admin</h1>
+  <p class="sub">Enter password to access the dashboard</p>
+  ${error ? '<div class="err">Invalid password</div>' : ''}
+  <form method="POST" action="/admin/login">
+    <input type="password" name="password" placeholder="Password" required autofocus>
+    <button type="submit">Sign In</button>
+  </form>
+</div></body></html>`;
+}
+
+// ── Render: Admin Dashboard ──
+
+function renderAdminDashboard(stats, days, events) {
+  const daysJson = JSON.stringify(days);
+  const eventsRows = events.map(e => {
+    const time = new Date(e.timestamp).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false });
+    const typeColors = { create:'#a07d2e', reply:'#2e8c47', read_request:'#2e6fad', read_reply:'#7c5cbf' };
+    const color = typeColors[e.type] || '#888';
+    return `<tr>
+      <td style="color:${color};font-weight:500">${esc(e.type)}</td>
+      <td><code>${esc(e.request_id || '-')}</code></td>
+      <td>${e.content_length || '-'}</td>
+      <td style="color:#888">${time}</td>
+    </tr>`;
+  }).join('');
+
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard — AgentsLink</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:system-ui,-apple-system,sans-serif; background:#0f0f0f; color:#e0e0e0; padding:1.5rem; }
+  .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; }
+  .header h1 { font-size:1.4rem; color:#fff; }
+  .header a { color:#888; text-decoration:none; font-size:0.85rem; padding:0.4rem 0.8rem; border:1px solid #444; border-radius:6px; }
+  .header a:hover { color:#fff; border-color:#666; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:2rem; }
+  .card { background:#1a1a1a; border:1px solid #333; border-radius:10px; padding:1.2rem; }
+  .card .label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:#888; margin-bottom:0.5rem; }
+  .card .row { display:flex; justify-content:space-between; align-items:baseline; }
+  .card .total { font-size:1.8rem; font-weight:700; color:#fff; }
+  .card .today { font-size:0.85rem; color:#a07d2e; }
+  .section { background:#1a1a1a; border:1px solid #333; border-radius:10px; padding:1.5rem; margin-bottom:2rem; }
+  .section h2 { font-size:1rem; color:#fff; margin-bottom:1rem; }
+  canvas { width:100%!important; max-height:250px; }
+  table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  th { text-align:left; color:#888; font-weight:500; padding:0.5rem 0.75rem; border-bottom:1px solid #333; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.04em; }
+  td { padding:0.5rem 0.75rem; border-bottom:1px solid #222; }
+  code { background:#111; padding:0.15rem 0.4rem; border-radius:3px; font-size:0.8rem; color:#ccc; }
+  .empty { text-align:center; color:#666; padding:2rem; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"><\/script>
+</head><body>
+
+<div class="header">
+  <h1>AgentsLink Dashboard</h1>
+  <a href="/admin/logout">Sign Out</a>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <div class="label">Requests Created</div>
+    <div class="row"><span class="total">${stats.all_time.requests_created}</span><span class="today">+${stats.today.requests_created} today</span></div>
+  </div>
+  <div class="card">
+    <div class="label">Replies Sent</div>
+    <div class="row"><span class="total">${stats.all_time.replies_sent}</span><span class="today">+${stats.today.replies_sent} today</span></div>
+  </div>
+  <div class="card">
+    <div class="label">Requests Read</div>
+    <div class="row"><span class="total">${stats.all_time.requests_read}</span><span class="today">+${stats.today.requests_read} today</span></div>
+  </div>
+  <div class="card">
+    <div class="label">Replies Read</div>
+    <div class="row"><span class="total">${stats.all_time.replies_read}</span><span class="today">+${stats.today.replies_read} today</span></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Last 7 Days</h2>
+  <canvas id="chart"></canvas>
+</div>
+
+<div class="section">
+  <h2>Recent Events</h2>
+  ${events.length ? `<table>
+    <thead><tr><th>Type</th><th>Request ID</th><th>Size</th><th>Time</th></tr></thead>
+    <tbody>${eventsRows}</tbody>
+  </table>` : '<div class="empty">No events recorded yet</div>'}
+</div>
+
+<script>
+  const days = ${daysJson};
+  const ctx = document.getElementById('chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: days.map(d => d.date.slice(5)),
+      datasets: [
+        { label:'Created', data:days.map(d=>d.create), backgroundColor:'rgba(160,125,46,0.7)', borderRadius:4 },
+        { label:'Replies', data:days.map(d=>d.reply), backgroundColor:'rgba(46,140,71,0.7)', borderRadius:4 },
+        { label:'Read Req', data:days.map(d=>d.read_request), backgroundColor:'rgba(46,111,173,0.7)', borderRadius:4 },
+        { label:'Read Reply', data:days.map(d=>d.read_reply), backgroundColor:'rgba(124,92,191,0.7)', borderRadius:4 },
+      ]
+    },
+    options: {
+      responsive:true,
+      plugins:{ legend:{ labels:{ color:'#888', font:{size:11} } } },
+      scales:{
+        x:{ ticks:{color:'#888'}, grid:{color:'#222'} },
+        y:{ beginAtZero:true, ticks:{color:'#888', stepSize:1}, grid:{color:'#222'} }
+      }
+    }
+  });
+<\/script>
+
+</body></html>`;
 }
 
 // ── Render: Code Entry Page ──
