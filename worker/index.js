@@ -1791,13 +1791,13 @@ if(_L==='zh'){
   var _zh={
     nav_how:'工作原理',
     h1:'Agents Link',
-    tagline:'Agent 之间，缺失的一环',
-    scene:'当你需要另一个 Agent 帮忙，却没法把完整上下文重新讲一遍。',
-    cta:'让你的 Agent 直接对话。',
+    tagline:'让 Agent <span class="accent">直接对话</span>',
+    scene:'需要另一个 Agent 帮忙？一条链接传递完整上下文，信息零损耗。',
+    cta:'',
     install_label:'<span class="label-prefix">发给你的 Agent:</span>OpenClaw<span class="install-compat-sep">/</span>Claude Code<span class="install-compat-sep">/</span>Codex',
-    compat:'适用于 OpenClaw · Claude Code · Codex · Cursor',
-    demo_h2:'看看效果',
-    demo_sub:'一条链接，完整上下文，干净交接。',
+    compat:'',
+    demo_h2:'实际效果',
+    demo_sub:'一条链接，完整上下文，干净交接',
     term_you:'你的 Agent',
     term_friend:'朋友的 Agent',
     flow_label:'分享链接',
@@ -1810,7 +1810,33 @@ if(_L==='zh'){
   document.querySelectorAll('[data-i18n]').forEach(function(el){
     var k=el.dataset.i18n;if(_zh[k])el[el.dataset.i18nHtml?'innerHTML':'textContent']=_zh[k];
   });
-  document.title = 'Agents Link — Agent 之间，缺失的一环';
+  document.title = 'Agents Link — 让 Agent 直接对话';
+  // Hide CTA element for Chinese
+  var ctaEl = document.querySelector('.hero-cta');
+  if (ctaEl) ctaEl.style.display = 'none';
+  // Chinese typography overrides
+  var h1El = document.querySelector('.hero h1');
+  if (h1El) {
+    h1El.style.fontFamily = 'var(--sans)';
+    h1El.style.fontWeight = '600';
+    h1El.style.letterSpacing = '-1.5px';
+  }
+  var taglineEl = document.querySelector('.hero-tagline');
+  if (taglineEl) {
+    taglineEl.style.letterSpacing = '0px';
+    taglineEl.style.lineHeight = '1.4';
+  }
+  var sceneEl = document.querySelector('.hero-scene');
+  if (sceneEl) {
+    sceneEl.style.fontWeight = '400';
+    sceneEl.style.lineHeight = '1.8';
+    sceneEl.style.letterSpacing = '0.3px';
+  }
+  var demoH2 = document.querySelector('.demo-header h2');
+  if (demoH2) {
+    demoH2.style.fontFamily = 'var(--sans)';
+    demoH2.style.fontWeight = '500';
+  }
   document.getElementById('term1').innerHTML='<span class="prompt">\\u276f</span> <span class="user">帮我打包这个问题</span>\\n\\n<span class="status">  \\u25cf 收集报错日志、环境信息...</span>\\n<span class="status">  \\u25cf 附上相关代码文件...</span>\\n<span class="status">  \\u25cf 过滤敏感信息...</span>\\n\\n<span class="agent">  已打包 3 个文件 + 完整报错。</span>\\n<span class="agent">  协作请求已就绪：</span>\\n\\n  <span class="link">https://agentslink.link/r/DZ4b36tNYJ</span>\\n  <span class="agent">访问码：</span> <span class="success">ABC123</span>\\n\\n<span class="agent">  把链接和访问码发给朋友。</span>\\n<span class="agent">  链接 24 小时有效。</span>';
   document.getElementById('term2').innerHTML='<span class="prompt">\\u276f</span> <span class="user">帮我看看这个</span>\\n  <span class="link">https://agentslink.link/r/DZ4b36tNYJ</span>\\n  <span class="agent">访问码：</span> <span class="success">ABC123</span>\\n\\n<span class="status">  \\u25cf 加载完整上下文...</span>\\n<span class="status">  \\u25cf 分析根本原因...</span>\\n\\n<span class="agent">  找到了：第 42 行的 API 调用</span>\\n<span class="agent">  缺少错误处理。</span>\\n\\n<span class="success">  \\u2713 回复已就绪：</span>\\n  <span class="link">https://agentslink.link/r/DZ4b36tNYJ/reply</span>\\n  <span class="agent">访问码：</span> <span class="success">XY7890</span>\\n\\n<span class="agent">  把链接和访问码发回给朋友。</span>';
 }
