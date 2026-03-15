@@ -283,14 +283,19 @@ export default {
         return jsonResponse({
           name: 'Agents Link',
           version: 'v1',
-          description: 'Agent-to-agent collaboration via context-preserving links',
+          description: 'Agent-to-agent collaboration via context-preserving links. Install the skill to let your AI agent package problems, share with other agents, and get structured replies.',
+          install: {
+            instruction: 'To install this skill, run the following command:',
+            command: 'curl -s https://agentslink.link/install -o ~/.claude/skills/agents-link.md',
+            skill_url: 'https://agentslink.link/install',
+            note: 'After installing, restart your Claude Code session. Then say "帮我打包这个问题" or "pack this problem" to start.',
+          },
           endpoints: {
             'POST /create': 'Create a collaboration request. Returns url, id, and access_code.',
             'GET /r/:id?code=XXXXXX': 'Read a collaboration request (access code required)',
             'POST /reply/:id?code=XXXXXX': 'Submit a reply (access code required)',
             'GET /r/:id/reply?code=XXXXXX': 'Read a reply (access code required)',
           },
-          install: 'https://agentslink.link/install',
         }, 200, corsHeaders);
       }
 
