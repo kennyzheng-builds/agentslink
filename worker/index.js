@@ -547,40 +547,48 @@ function renderHomePage() {
 
   /* ── Hero ── */
   .hero {
-    padding: 140px 0 100px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
     text-align: center;
+    padding: 80px 0 60px;
+    overflow: hidden;
+  }
+  .hero > .container {
+    width: 100%;
   }
 
   /* Radial glow behind hero */
   .hero::before {
     content: '';
     position: absolute;
-    top: -80px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    width: 900px;
-    height: 600px;
-    background: radial-gradient(ellipse at center, rgba(160,125,46,0.06) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    width: 1000px;
+    height: 700px;
+    background: radial-gradient(ellipse at center, rgba(160,125,46,0.05) 0%, transparent 70%);
     pointer-events: none;
   }
 
   .hero h1 {
     font-family: var(--serif);
-    font-size: clamp(56px, 8vw, 110px);
+    font-size: clamp(64px, 11vw, 160px);
     font-weight: 400;
     line-height: 1.0;
-    letter-spacing: -3px;
+    letter-spacing: -4px;
     color: var(--text);
   }
 
   .hero-tagline {
     font-family: var(--sans);
-    font-size: clamp(22px, 2.8vw, 32px);
+    font-size: clamp(22px, 2.5vw, 30px);
     font-weight: 600;
     color: var(--text);
-    margin-top: 16px;
-    letter-spacing: -0.5px;
+    margin-top: 24px;
+    letter-spacing: -0.3px;
   }
   .hero-tagline .accent {
     color: var(--gold);
@@ -600,7 +608,7 @@ function renderHomePage() {
 
   /* ── Install command ── */
   .install-block {
-    margin-top: 40px;
+    margin-top: 48px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1011,13 +1019,13 @@ function renderHomePage() {
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .container, .narrow { padding: 0 20px; }
-    .hero { padding: 100px 0 64px; }
-    .hero h1 { letter-spacing: -1px; }
+    .hero { min-height: auto; padding: 100px 0 64px; }
+    .hero h1 { letter-spacing: -2px; }
     .hero-tagline { font-size: 20px; }
     .hero-scene { font-size: 15px; }
-    .install-label .label-prefix { display: none; }
-    .install-label { font-size: 12px; }
-    .install-cmd { max-width: 100%; }
+    .install-label { font-size: 11px; white-space: nowrap; }
+    .install-cmd { max-width: 100%; overflow: hidden; }
+    .install-cmd-text { overflow: hidden; text-overflow: ellipsis; }
     .narrative { padding: 48px 0 56px; }
     .narrative-grid {
       grid-template-columns: 1fr;
@@ -1057,6 +1065,7 @@ function renderHomePage() {
     .hero h1 { font-size: 48px; }
     .hero-tagline { font-size: 18px; }
     .hero-scene { font-size: 14px; }
+    .install-label { font-size: 10px; }
     .nav-links { gap: 16px; }
     .terminal-body pre { font-size: 11px; }
     .terminal-body { padding: 16px 14px; }
@@ -1098,7 +1107,7 @@ function renderHomePage() {
   </div>
 </section>
 
-<section class="demo" id="how-it-works" style="padding-top: 40px;">
+<section class="demo" id="how-it-works">
   <div class="container">
     <div class="demo-header reveal">
       <h2 data-i18n="demo_h2">See it in action</h2>
