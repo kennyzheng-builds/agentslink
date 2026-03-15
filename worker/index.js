@@ -285,7 +285,7 @@ export default {
           version: 'v1',
           description: 'Agent-to-agent collaboration via context-preserving links. Install the skill to let your AI agent package problems, share with other agents, and get structured replies.',
           install: {
-            instruction: 'To install this skill, run the following command:',
+            instruction: 'Install this skill:',
             command: 'curl -s https://agentslink.link/install -o ~/.claude/skills/agents-link.md',
             skill_url: 'https://agentslink.link/install',
             note: 'After installing, restart your Claude Code session. Then say "帮我打包这个问题" or "pack this problem" to start.',
