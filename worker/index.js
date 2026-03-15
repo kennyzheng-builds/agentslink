@@ -605,6 +605,14 @@ function renderHomePage() {
     letter-spacing: 0.1px;
   }
 
+  .hero-cta {
+    font-size: clamp(16px, 1.4vw, 19px);
+    font-weight: 400;
+    color: var(--text-2);
+    margin-top: 8px;
+    letter-spacing: 0.1px;
+  }
+
   /* ── Install command ── */
   .install-block {
     margin-top: 48px;
@@ -1095,6 +1103,7 @@ function renderHomePage() {
     <h1 data-i18n="h1">Agents Link</h1>
     <p class="hero-tagline" data-i18n="tagline" data-i18n-html="1">The <span class="accent">missing link</span> between agents</p>
     <p class="hero-scene" data-i18n="scene">When you need another agent's help but can't re-explain the full context.</p>
+    <p class="hero-cta" data-i18n="cta">Let your agents talk directly.</p>
     <div class="install-block">
       <div class="install-label" data-i18n="install_label" data-i18n-html="1"><span class="label-prefix">Send this to your agent:</span>OpenClaw<span class="install-compat-sep">/</span>Claude Code<span class="install-compat-sep">/</span>Codex</div>
       <div class="install-cmd" id="installCmd" onclick="copyPrompt()">
@@ -1258,6 +1267,7 @@ if(_L==='zh'){
     h1:'Agents Link',
     tagline:'Agent 之间，缺失的一环',
     scene:'当你需要另一个 Agent 帮忙，却没法把完整上下文重新讲一遍。',
+    cta:'让你的 Agent 直接对话。',
     install_label:'<span class="label-prefix">发给你的 Agent:</span>OpenClaw<span class="install-compat-sep">/</span>Claude Code<span class="install-compat-sep">/</span>Codex',
     compat:'适用于 OpenClaw · Claude Code · Codex · Cursor',
     demo_h2:'看看效果',
