@@ -1,0 +1,7 @@
+name = "agentlink"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "AGENT_LINK_KV"
+id = "5d45ad263039414fb25c18ac1040b531"
