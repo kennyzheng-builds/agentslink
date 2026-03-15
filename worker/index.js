@@ -949,17 +949,21 @@ function render404Page() {
 
 // ── Render: Homepage ──
 
+
+// ── Render: Homepage ──
+
 function renderHomePage() {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>var _L=/^zh/i.test(navigator.language)?'zh':'en';document.documentElement.lang=_L==='zh'?'zh-CN':'en';</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agents Link — Let your agents talk directly</title>
+<title>Agents Link — The missing link between agents</title>
 <meta name="description" content="Your Agent packs full context into a link. The other Agent reads, diagnoses, and replies. Zero information loss.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f8f6f1;
@@ -977,8 +981,8 @@ function renderHomePage() {
     --green-dim: rgba(46,140,71,0.07);
     --blue: #2e6fad;
     --blue-dim: rgba(46,111,173,0.06);
-    --serif: 'Instrument Serif', 'Georgia', serif;
-    --sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --serif: 'Instrument Serif', 'Noto Serif SC', 'Georgia', serif;
+    --sans: 'Outfit', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
     --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
   }
 
@@ -1066,86 +1070,98 @@ function renderHomePage() {
 
   /* ── Hero ── */
   .hero {
-    padding: 120px 0 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
+    text-align: center;
+    padding: 0 0 100px;
+    overflow: hidden;
+  }
+  .hero > .container {
+    width: 100%;
   }
 
   /* Radial glow behind hero */
   .hero::before {
     content: '';
     position: absolute;
-    top: -60px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    width: 800px;
-    height: 500px;
-    background: radial-gradient(ellipse at center, rgba(160,125,46,0.06) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    width: 1000px;
+    height: 700px;
+    background: radial-gradient(ellipse at center, rgba(160,125,46,0.05) 0%, transparent 70%);
     pointer-events: none;
-  }
-
-  .hero-eyebrow {
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--gold);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 28px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .hero-eyebrow::before {
-    content: '';
-    width: 24px;
-    height: 1px;
-    background: var(--gold);
-    opacity: 0.4;
   }
 
   .hero h1 {
     font-family: var(--serif);
-    font-size: clamp(52px, 7vw, 96px);
+    font-size: clamp(48px, 8vw, 120px);
     font-weight: 400;
     line-height: 1.0;
-    letter-spacing: -2px;
+    letter-spacing: -3px;
     color: var(--text);
   }
-  .hero h1 em {
-    font-style: italic;
-    color: var(--text-3);
-    transition: color 0.4s;
+
+  .hero-tagline {
+    font-family: var(--sans);
+    font-size: clamp(26px, 3.5vw, 44px);
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 20px;
+    letter-spacing: -0.5px;
   }
-  .hero h1 em:hover {
+  .hero-tagline .accent {
     color: var(--gold);
   }
 
-  .hero-sub {
-    font-size: 18px;
+  .hero-scene {
+    font-size: clamp(16px, 1.4vw, 19px);
     font-weight: 300;
-    color: var(--text-2);
+    color: var(--text-3);
     line-height: 1.7;
-    margin-top: 32px;
-    max-width: 520px;
+    margin-top: 24px;
+    margin-left: auto;
+    margin-right: auto;
+    letter-spacing: 0.1px;
+  }
+
+  .hero-cta {
+    font-size: clamp(16px, 1.4vw, 19px);
+    font-weight: 400;
+    color: var(--text-2);
+    margin-top: 8px;
     letter-spacing: 0.1px;
   }
 
   /* ── Install command ── */
   .install-block {
-    margin-top: 36px;
+    margin-top: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .install-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 400;
     color: var(--text-3);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
-  .install-label-sep {
-    margin: 0 4px;
-    opacity: 0.35;
+  .install-label .label-prefix {
+    display: inline;
+    margin-right: 6px;
+  }
+  .install-compat {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 16px;
+    letter-spacing: 0.2px;
+  }
+  .install-compat-sep {
+    margin: 0 6px;
+    opacity: 0.4;
   }
   .install-cmd {
     display: inline-flex;
@@ -1504,9 +1520,9 @@ function renderHomePage() {
     50% { opacity: 0; }
   }
 
-  .hero-eyebrow { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
-  .hero h1 { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
-  .hero-sub { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
+  .hero h1 { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+  .hero-tagline { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+  .hero-scene { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
   .install-block { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
 
   .cursor-blink::after {
@@ -1534,10 +1550,13 @@ function renderHomePage() {
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .container, .narrow { padding: 0 20px; }
-    .hero { padding: 80px 0 0; }
+    .hero { min-height: auto; padding: 100px 0 64px; }
     .hero h1 { letter-spacing: -1px; }
-    .hero-sub { font-size: 16px; max-width: 100%; }
-    .install-cmd { max-width: 100%; }
+    .hero-tagline { font-size: 24px; }
+    .hero-scene { font-size: 15px; }
+    .install-label { font-size: 12px; white-space: nowrap; }
+    .install-cmd { max-width: 100%; overflow: hidden; }
+    .install-cmd-text { overflow: hidden; text-overflow: ellipsis; }
     .narrative { padding: 48px 0 56px; }
     .narrative-grid {
       grid-template-columns: 1fr;
@@ -1574,7 +1593,10 @@ function renderHomePage() {
   }
 
   @media (max-width: 480px) {
-    .hero h1 { font-size: 40px; }
+    .hero h1 { font-size: 42px; }
+    .hero-tagline { font-size: 20px; }
+    .hero-scene { font-size: 14px; }
+    .install-label { font-size: 10px; }
     .nav-links { gap: 16px; }
     .terminal-body pre { font-size: 11px; }
     .terminal-body { padding: 16px 14px; }
@@ -1590,8 +1612,8 @@ function renderHomePage() {
       Agents Link
     </a>
     <div class="nav-links">
-      <a href="#how-it-works">How it works</a>
-      <a class="gh-link" href="https://github.com/kennyzheng-builds/agentslink" target="_blank">
+      <a href="#how-it-works" data-i18n="nav_how">How it works</a>
+      <a class="gh-link" href="https://github.com/kennyzheng-builds/agent-link" target="_blank">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
         GitHub
       </a>
@@ -1601,11 +1623,12 @@ function renderHomePage() {
 
 <section class="hero">
   <div class="container">
-    <div class="hero-eyebrow">Agent-to-Agent Collaboration</div>
-    <h1>Humans relay.<br><em>Context dies.</em></h1>
-    <p class="hero-sub">Your Agent packs full context into a link. The other Agent reads it, diagnoses the issue, and replies &mdash; nothing lost in translation.</p>
+    <h1 data-i18n="h1">Agents Link</h1>
+    <p class="hero-tagline" data-i18n="tagline" data-i18n-html="1">The <span class="accent">missing link</span> between agents</p>
+    <p class="hero-scene" data-i18n="scene">When you need another agent's help but can't re-explain the full context.</p>
+    <p class="hero-cta" data-i18n="cta">Let your agents talk directly.</p>
     <div class="install-block">
-      <div class="install-label">Send this to your agent: OpenClaw<span class="install-label-sep">/</span>Claude Code<span class="install-label-sep">/</span>Codex</div>
+      <div class="install-label" data-i18n="install_label" data-i18n-html="1"><span class="label-prefix">Send this to your agent:</span>OpenClaw<span class="install-compat-sep">/</span>Claude Code<span class="install-compat-sep">/</span>Codex</div>
       <div class="install-cmd" id="installCmd" onclick="copyPrompt()">
         <span class="install-cmd-text">Install the Agents Link skill: https://agentslink.link/install</span>
         <button class="install-cmd-copy" id="copyBtn">
@@ -1616,21 +1639,21 @@ function renderHomePage() {
   </div>
 </section>
 
-<section class="demo" id="how-it-works" style="padding-top: 80px;">
+<section class="demo" id="how-it-works">
   <div class="container">
     <div class="demo-header reveal">
-      <h2>See it in action</h2>
-      <p>Two agents, one link, zero context lost</p>
+      <h2 data-i18n="demo_h2">See it in action</h2>
+      <p data-i18n="demo_sub">One link, full context, clean handoff.</p>
     </div>
 
     <div class="flow-container">
       <div class="terminal reveal">
         <div class="terminal-bar">
           <div class="terminal-dots"><span></span><span></span><span></span></div>
-          <span class="terminal-title">Your Agent</span>
+          <span class="terminal-title" data-i18n="term_you">Your Agent</span>
         </div>
         <div class="terminal-body">
-          <pre><span class="prompt">&#x276f;</span> <span class="user">Pack this problem</span>
+          <pre id="term1"><span class="prompt">&#x276f;</span> <span class="user">Pack this problem</span>
 
 <span class="status">  &#x25cf; Collecting error logs, env info...</span>
 <span class="status">  &#x25cf; Attaching relevant code files...</span>
@@ -1650,17 +1673,17 @@ function renderHomePage() {
       <div class="flow-connector reveal reveal-d1">
         <div class="flow-connector-line"></div>
         <div class="flow-connector-dot"></div>
-        <div class="flow-connector-label">Share link</div>
+        <div class="flow-connector-label" data-i18n="flow_label">Share link</div>
         <div class="flow-connector-line"></div>
       </div>
 
       <div class="terminal reveal reveal-d2">
         <div class="terminal-bar">
           <div class="terminal-dots"><span></span><span></span><span></span></div>
-          <span class="terminal-title">Friend's Agent</span>
+          <span class="terminal-title" data-i18n="term_friend">Friend's Agent</span>
         </div>
         <div class="terminal-body">
-          <pre><span class="prompt">&#x276f;</span> <span class="user">Help me look at this</span>
+          <pre id="term2"><span class="prompt">&#x276f;</span> <span class="user">Help me look at this</span>
   <span class="link">https://agentslink.link/r/DZ4b36tNYJ</span>
   <span class="agent">Code:</span> <span class="success">ABC123</span>
 
@@ -1688,25 +1711,25 @@ function renderHomePage() {
         <div class="trust-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        24h auto-delete
+        <span data-i18n="trust_1">24h auto-delete</span>
       </div>
       <div class="trust-item">
         <div class="trust-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        Sensitive info filtered
+        <span data-i18n="trust_2">Sensitive info filtered</span>
       </div>
       <div class="trust-item">
         <div class="trust-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </div>
-        Full visibility
+        <span data-i18n="trust_3">Full visibility</span>
       </div>
       <div class="trust-item">
         <div class="trust-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         </div>
-        Access-code protected
+        <span data-i18n="trust_4">Access-code protected</span>
       </div>
     </div>
   </div>
@@ -1716,10 +1739,10 @@ function renderHomePage() {
   <div class="container">
     <div class="footer-left">
       <a class="footer-brand" href="/">Agents Link</a>
-      <span class="footer-note">Open source</span>
+      <span class="footer-note" data-i18n="footer_note">made with &#x2764;&#xFE0F;</span>
     </div>
     <div class="footer-right">
-      <a href="https://github.com/kennyzheng-builds/agentslink" target="_blank">
+      <a href="https://github.com/kennyzheng-builds/agent-link" target="_blank">
         <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
         GitHub
       </a>
@@ -1743,7 +1766,7 @@ function copyPrompt() {
   navigator.clipboard.writeText(PROMPT).then(function() {
     var btn = document.getElementById('copyBtn');
     btn.classList.add('copied');
-    showToast('Copied \\u2014 paste it to your Agent');
+    showToast(typeof _toastMsg!=='undefined'?_toastMsg:'Copied \\u2014 paste it to your Agent');
     setTimeout(function() { btn.classList.remove('copied'); }, 2500);
   });
 }
@@ -1759,11 +1782,42 @@ var observer = new IntersectionObserver(function(entries) {
   });
 }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
 reveals.forEach(function(el) { observer.observe(el); });
+
+/* i18n */
+if(_L==='zh'){
+  var _zh={
+    nav_how:'工作原理',
+    h1:'Agents Link',
+    tagline:'Agent 之间，缺失的一环',
+    scene:'当你需要另一个 Agent 帮忙，却没法把完整上下文重新讲一遍。',
+    cta:'让你的 Agent 直接对话。',
+    install_label:'<span class="label-prefix">发给你的 Agent:</span>OpenClaw<span class="install-compat-sep">/</span>Claude Code<span class="install-compat-sep">/</span>Codex',
+    compat:'适用于 OpenClaw · Claude Code · Codex · Cursor',
+    demo_h2:'看看效果',
+    demo_sub:'一条链接，完整上下文，干净交接。',
+    term_you:'你的 Agent',
+    term_friend:'朋友的 Agent',
+    flow_label:'分享链接',
+    trust_1:'24 小时自动删除',
+    trust_2:'敏感信息自动脱敏',
+    trust_3:'内容完全可见',
+    trust_4:'访问码保护',
+    footer_note:'用 ❤️ 制作'
+  };
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var k=el.dataset.i18n;if(_zh[k])el[el.dataset.i18nHtml?'innerHTML':'textContent']=_zh[k];
+  });
+  document.title = 'Agents Link — Agent 之间，缺失的一环';
+  document.getElementById('term1').innerHTML='<span class="prompt">\\u276f</span> <span class="user">帮我打包这个问题</span>\\n\\n<span class="status">  \\u25cf 收集报错日志、环境信息...</span>\\n<span class="status">  \\u25cf 附上相关代码文件...</span>\\n<span class="status">  \\u25cf 过滤敏感信息...</span>\\n\\n<span class="agent">  已打包 3 个文件 + 完整报错。</span>\\n<span class="agent">  协作请求已就绪：</span>\\n\\n  <span class="link">https://agentslink.link/r/DZ4b36tNYJ</span>\\n  <span class="agent">访问码：</span> <span class="success">ABC123</span>\\n\\n<span class="agent">  把链接和访问码发给朋友。</span>\\n<span class="agent">  链接 24 小时有效。</span>';
+  document.getElementById('term2').innerHTML='<span class="prompt">\\u276f</span> <span class="user">帮我看看这个</span>\\n  <span class="link">https://agentslink.link/r/DZ4b36tNYJ</span>\\n  <span class="agent">访问码：</span> <span class="success">ABC123</span>\\n\\n<span class="status">  \\u25cf 加载完整上下文...</span>\\n<span class="status">  \\u25cf 分析根本原因...</span>\\n\\n<span class="agent">  找到了：第 42 行的 API 调用</span>\\n<span class="agent">  缺少错误处理。</span>\\n\\n<span class="success">  \\u2713 回复已就绪：</span>\\n  <span class="link">https://agentslink.link/r/DZ4b36tNYJ/reply</span>\\n  <span class="agent">访问码：</span> <span class="success">XY7890</span>\\n\\n<span class="agent">  把链接和访问码发回给朋友。</span>';
+}
+var _toastMsg=_L==='zh'?'已复制——粘贴给你的 Agent':'Copied \\u2014 paste it to your Agent';
 </script>
 </body>
 </html>
 `;
 }
+
 
 // ── Utility ──
 
