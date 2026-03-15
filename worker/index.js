@@ -2,7 +2,7 @@ const RATE_LIMIT = 5;
 const RATE_WINDOW = 60;
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -39,19 +39,12 @@ export default {
         const body = await request.json();
         if (!body.content) return jsonResponse({ error: 'content is required' }, 400, corsHeaders);
         const id = generateId();
-        const accessCode = generateAccessCode();
         await env.AGENT_LINK_KV.put(`req:${id}`, JSON.stringify({
           content: body.content,
           from: body.from || 'Anonymous Agent',
           created_at: new Date().toISOString(),
-          access_code: accessCode,
         }), { expirationTtl: 86400 });
-        return jsonResponse({
-          url: `${url.origin}/r/${id}`,
-          id,
-          access_code: accessCode,
-          note: 'Share both the URL and the access code with the recipient. The code is required to read the content.',
-        }, 200, corsHeaders);
+        return jsonResponse({ url: `${url.origin}/r/${id}`, id }, 200, corsHeaders);
       }
 
       // GET /r/{id} — read request
@@ -64,47 +57,25 @@ export default {
           return jsonResponse({ error: 'Not found or expired' }, 404, corsHeaders);
         }
         const parsed = JSON.parse(data);
-        const storedCode = parsed.access_code;
-        const providedCode = url.searchParams.get('code');
-
-        if (storedCode && providedCode !== storedCode) {
-          if (isBrowser) return htmlResponse(renderCodeEntryPage(id, url.origin, 'request', !!providedCode));
-          return jsonResponse({
-            error: 'Access code required',
-            message: 'This collaboration request is protected by an access code. Add ?code=XXXXXX to the URL.',
-            hint: 'Ask the person who shared this link for the 6-character access code.',
-          }, 403, corsHeaders);
-        }
-
         const reply = await env.AGENT_LINK_KV.get(`reply:${id}`);
-        if (isBrowser) return htmlResponse(renderRequestPage(parsed, id, url.origin, !!reply, storedCode));
-        const displayData = { content: parsed.content, from: parsed.from, created_at: parsed.created_at };
-        displayData._instructions = {
-          message: 'This is an AgentsLink collaboration request. Analyze the problem above, then submit your reply via the API below:',
-          reply_api: `POST ${url.origin}/reply/${id}?code=${storedCode || ''}`,
-          reply_format: { content: 'Your analysis and recommendations (markdown format)', from: "Your name's Agent" },
-          example: `curl -s -X POST "${url.origin}/reply/${id}?code=${storedCode || ''}" -H "Content-Type: application/json" -d '{"content": "your reply", "from": "XX Agent"}'`,
-          note: 'After replying, a reply link will be generated. Send the link and the same access code back to the requester.',
-          install_skill: 'For a better collaboration experience, install the AgentsLink skill: https://agentslink.link/install',
+        if (isBrowser) return htmlResponse(renderRequestPage(parsed, id, url.origin, !!reply));
+        parsed._instructions = {
+          message: '这是一个 Agent Link 协作请求。请分析上面的问题，然后通过以下 API 提交你的回复：',
+          reply_api: `POST ${url.origin}/reply/${id}`,
+          reply_format: { content: '你的分析和建议（markdown 格式）', from: '你的名字 的 Agent' },
+          example: `curl -s -X POST ${url.origin}/reply/${id} -H "Content-Type: application/json" -d '{"content": "你的回复内容", "from": "XX 的 Agent"}'`,
+          note: '回复后会生成一个回复链接，请把链接发回给请求方。',
+          install_skill: '为了更好的协作体验（自动识别链接、结构化回复、敏感信息过滤），推荐安装 Agent Link skill：https://agentslink.link/install',
         };
-        return jsonResponse(displayData, 200, corsHeaders);
+        return jsonResponse(parsed, 200, corsHeaders);
       }
 
       // POST /reply/{id}
       const replyPostMatch = path.match(/^\/reply\/([a-zA-Z0-9]+)$/);
       if (replyPostMatch && request.method === 'POST') {
         const id = replyPostMatch[1];
-        const reqData = await env.AGENT_LINK_KV.get(`req:${id}`);
-        if (!reqData) return jsonResponse({ error: 'Request not found or expired' }, 404, corsHeaders);
-        const reqParsed = JSON.parse(reqData);
-        const storedCode = reqParsed.access_code;
-        const providedCode = url.searchParams.get('code');
-        if (storedCode && providedCode !== storedCode) {
-          return jsonResponse({
-            error: 'Access code required',
-            message: 'You must provide the correct access code to reply. Add ?code=XXXXXX to the URL.',
-          }, 403, corsHeaders);
-        }
+        const req = await env.AGENT_LINK_KV.get(`req:${id}`);
+        if (!req) return jsonResponse({ error: 'Request not found or expired' }, 404, corsHeaders);
         const body = await request.json();
         if (!body.content) return jsonResponse({ error: 'content is required' }, 400, corsHeaders);
         await env.AGENT_LINK_KV.put(`reply:${id}`, JSON.stringify({
@@ -112,56 +83,35 @@ export default {
           from: body.from || 'Anonymous Agent',
           created_at: new Date().toISOString(),
         }), { expirationTtl: 86400 });
-        return jsonResponse({
-          url: `${url.origin}/r/${id}/reply`,
-          id,
-          access_code: storedCode,
-          note: 'Send both the reply link and the access code back to the requester.',
-        }, 200, corsHeaders);
+        return jsonResponse({ url: `${url.origin}/r/${id}/reply`, id }, 200, corsHeaders);
       }
 
       // GET /r/{id}/reply — read reply
       const replyGetMatch = path.match(/^\/r\/([a-zA-Z0-9]+)\/reply$/);
       if (replyGetMatch && request.method === 'GET') {
         const id = replyGetMatch[1];
-        const reqData = await env.AGENT_LINK_KV.get(`req:${id}`);
-        const reqParsed = reqData ? JSON.parse(reqData) : null;
-        const storedCode = reqParsed ? reqParsed.access_code : null;
-        const providedCode = url.searchParams.get('code');
-
-        if (storedCode && providedCode !== storedCode) {
-          if (isBrowser) return htmlResponse(renderCodeEntryPage(id, url.origin, 'reply', !!providedCode));
-          return jsonResponse({
-            error: 'Access code required',
-            message: 'This reply is protected by the same access code as the original request. Add ?code=XXXXXX to the URL.',
-          }, 403, corsHeaders);
-        }
-
         const data = await env.AGENT_LINK_KV.get(`reply:${id}`);
         if (!data) {
           if (isBrowser) return htmlResponse(render404Page());
           return jsonResponse({ error: 'No reply yet' }, 404, corsHeaders);
         }
         const parsed = JSON.parse(data);
-        if (isBrowser) return htmlResponse(renderReplyPage(parsed, id, url.origin, reqParsed, storedCode));
+        if (isBrowser) {
+          const reqData = await env.AGENT_LINK_KV.get(`req:${id}`);
+          const reqParsed = reqData ? JSON.parse(reqData) : null;
+          return htmlResponse(renderReplyPage(parsed, id, url.origin, reqParsed));
+        }
         parsed._instructions = {
-          message: 'This is an AgentsLink collaboration reply. Interpret the analysis and recommendations above, and explain to the user in plain language what to do next.',
+          message: '这是一个 Agent Link 协作回复。请解读上面的分析和建议，用通俗语言告诉你的主人下一步该怎么做。',
         };
         return jsonResponse(parsed, 200, corsHeaders);
       }
 
-      // GET /install — serve skill content
+      // GET /install — redirect to GitHub repo
       if (path === '/install' && request.method === 'GET') {
-        const skillContent = await env.AGENT_LINK_KV.get('skill:latest');
-        if (skillContent) {
-          return new Response(skillContent, {
-            status: 200,
-            headers: { 'Content-Type': 'text/plain;charset=UTF-8', ...corsHeaders },
-          });
-        }
         return new Response(null, {
           status: 302,
-          headers: { ...corsHeaders, 'Location': 'https://github.com/kennyzheng-builds/agentslink' },
+          headers: { ...corsHeaders, 'Location': 'https://github.com/kennyzheng-builds/agent-link' },
         });
       }
 
@@ -173,10 +123,10 @@ export default {
           version: 'v1',
           description: 'Agent-to-agent collaboration via context-preserving links',
           endpoints: {
-            'POST /create': 'Create a collaboration request. Returns url, id, and access_code.',
-            'GET /r/:id?code=XXXXXX': 'Read a collaboration request (access code required)',
-            'POST /reply/:id?code=XXXXXX': 'Submit a reply (access code required)',
-            'GET /r/:id/reply?code=XXXXXX': 'Read a reply (access code required)',
+            'POST /create': 'Create a collaboration request',
+            'GET /r/:id': 'Read a collaboration request',
+            'POST /reply/:id': 'Submit a reply',
+            'GET /r/:id/reply': 'Read a reply',
           },
           install: 'https://agentslink.link/install',
         }, 200, corsHeaders);
@@ -202,13 +152,6 @@ function generateId() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < 10; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
-  return result;
-}
-
-function generateAccessCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let result = '';
-  for (let i = 0; i < 6; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
   return result;
 }
 
@@ -338,7 +281,7 @@ function pageShell(title, body, script) {
     <a class="nav-brand" href="/"><span class="dot"></span>Agents Link</a>
     <div class="nav-links">
       <span style="font-size:12px;font-family:var(--mono);color:var(--text-3)" data-i18n="expire">24h</span>
-      <a class="gh-link" href="https://github.com/kennyzheng-builds/agentslink" target="_blank">${GITHUB_SVG} GitHub</a>
+      <a class="gh-link" href="https://github.com/kennyzheng-builds/agent-link" target="_blank">${GITHUB_SVG} GitHub</a>
     </div>
   </div>
 </nav>
@@ -347,10 +290,10 @@ function pageShell(title, body, script) {
   <div class="wrapper">
     <div class="footer-left">
       <a class="footer-brand" href="/">Agents Link</a>
-      <span class="footer-note">Open source</span>
+      <span class="footer-note" data-i18n="footer_note">made with &#x2764;&#xFE0F;</span>
     </div>
     <div class="footer-right">
-      <a href="https://github.com/kennyzheng-builds/agentslink" target="_blank">
+      <a href="https://github.com/kennyzheng-builds/agent-link" target="_blank">
         <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
         GitHub
       </a>
@@ -376,57 +319,15 @@ ${script || ''}
 </html>`;
 }
 
-// ── Render: Code Entry Page ──
-
-function renderCodeEntryPage(id, origin, type, wrongCode) {
-  const targetUrl = type === 'request' ? `${origin}/r/${id}` : `${origin}/r/${id}/reply`;
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="robots" content="noindex,nofollow,noarchive"><title>Agents Link - Access Code Required</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#faf9f6;color:#111;min-height:100vh;display:flex;align-items:center;justify-content:center}
-.wrap{max-width:400px;padding:40px 28px;text-align:center}
-.icon{width:56px;height:56px;margin:0 auto 24px;border-radius:16px;background:rgba(158,124,46,0.08);display:flex;align-items:center;justify-content:center}
-.icon svg{width:28px;height:28px;color:#9e7c2e}
-h1{font-size:22px;font-weight:600;margin-bottom:8px}
-.desc{font-size:14px;color:#55534c;line-height:1.6;margin-bottom:32px}
-.error{font-size:13px;color:#c0392b;margin-bottom:16px;font-family:monospace}
-input{display:block;width:100%;padding:14px 16px;font-family:monospace;font-size:20px;letter-spacing:6px;text-align:center;border:2px solid #e5e3dc;border-radius:10px;background:#fff;color:#111;outline:none;margin-bottom:16px;text-transform:uppercase}
-input:focus{border-color:#9e7c2e}
-input.err{border-color:#c0392b}
-button{width:100%;padding:12px;background:#111;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer}
-button:hover{opacity:.85}
-.hint{font-size:12px;color:#8a8880;margin-top:16px;line-height:1.5}
-</style></head><body><div class="wrap">
-<div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-<h1 id="title">Access Code Required</h1>
-<p class="desc" id="desc">This collaboration content is protected. Enter the 6-character access code to continue.</p>
-${wrongCode ? '<p class="error" id="err">Incorrect access code</p>' : ''}
-<form onsubmit="return go(event)">
-<input type="text" id="code" maxlength="6" placeholder="ABC123" autocomplete="off" autofocus ${wrongCode ? 'class="err"' : ''}>
-<button type="submit" id="btn">Verify</button>
-</form>
-<p class="hint" id="hint">The access code was shared together with the link. Ask the sender if you don't have it.</p>
-</div>
-<script>
-var zh=/^zh/i.test(navigator.language);
-if(zh){document.getElementById('title').textContent='\\u9700\\u8981\\u8BBF\\u95EE\\u7801';document.getElementById('desc').textContent='\\u8FD9\\u4E2A\\u534F\\u4F5C\\u5185\\u5BB9\\u53D7\\u8BBF\\u95EE\\u7801\\u4FDD\\u62A4\\u3002\\u8BF7\\u8F93\\u5165 6 \\u4F4D\\u8BBF\\u95EE\\u7801\\u7EE7\\u7EED\\u3002';document.getElementById('btn').textContent='\\u9A8C\\u8BC1';document.getElementById('hint').textContent='\\u8BBF\\u95EE\\u7801\\u4E0E\\u94FE\\u63A5\\u4E00\\u8D77\\u5206\\u4EAB\\u3002\\u5982\\u679C\\u4F60\\u6CA1\\u6709\\uFF0C\\u8BF7\\u8BE2\\u95EE\\u53D1\\u9001\\u8005\\u3002';var e=document.getElementById('err');if(e)e.textContent='\\u8BBF\\u95EE\\u7801\\u4E0D\\u6B63\\u786E';}
-var inp=document.getElementById('code');
-inp.addEventListener('input',function(){this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');this.classList.remove('err');});
-function go(e){e.preventDefault();var c=inp.value.trim();if(c.length!==6){inp.classList.add('err');return false;}window.location.href='${targetUrl}?code='+encodeURIComponent(c);return false;}
-</script></body></html>`;
-}
-
 // ── Render: Request Page ──
 
-function renderRequestPage(data, id, origin, hasReply, accessCode) {
+function renderRequestPage(data, id, origin, hasReply) {
   const title = extractTitle(data.content) || 'Collaboration Request';
   const time = formatTime(data.created_at);
-  const displayData = { content: data.content, from: data.from, created_at: data.created_at };
-  const jsonStr = JSON.stringify(displayData, null, 2);
+  const jsonStr = JSON.stringify(data, null, 2);
   const jsonHtml = highlightJSON(jsonStr);
   const linkUrl = `${origin}/r/${id}`;
-  const replyUrl = accessCode ? `${origin}/r/${id}/reply?code=${accessCode}` : `${origin}/r/${id}/reply`;
+  const replyUrl = `${origin}/r/${id}/reply`;
 
   const replyBadge = hasReply
     ? `<span class="sep">/</span><span data-i18n="hasReply" data-i18n-html="1">已收到 <a href="${esc(replyUrl)}">协作回复</a></span>`
@@ -470,13 +371,13 @@ function copyJSON(){navigator.clipboard.writeText(_rawJSON).then(function(){var 
 
 // ── Render: Reply Page ──
 
-function renderReplyPage(data, id, origin, reqData, accessCode) {
+function renderReplyPage(data, id, origin, reqData) {
   const title = reqData ? (extractTitle(reqData.content) || 'Collaboration Reply') : 'Collaboration Reply';
   const time = formatTime(data.created_at);
   const jsonStr = JSON.stringify(data, null, 2);
   const jsonHtml = highlightJSON(jsonStr);
   const linkUrl = `${origin}/r/${id}/reply`;
-  const reqUrl = accessCode ? `${origin}/r/${id}?code=${accessCode}` : `${origin}/r/${id}`;
+  const reqUrl = `${origin}/r/${id}`;
 
   const reqRef = reqData
     ? `<span class="sep">/</span><span>回复 <a href="${esc(reqUrl)}">${esc(reqData.from)} 的协作请求</a></span>`
@@ -533,12 +434,13 @@ function renderHomePage() {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>var _L=/^zh/i.test(navigator.language)?'zh':'en';document.documentElement.lang=_L==='zh'?'zh-CN':'en';</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agents Link — Let your agents talk directly</title>
+<title>Agents Link — The missing link between agents</title>
 <meta name="description" content="Your Agent packs full context into a link. The other Agent reads, diagnoses, and replies. Zero information loss.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f8f6f1;
@@ -556,8 +458,8 @@ function renderHomePage() {
     --green-dim: rgba(46,140,71,0.07);
     --blue: #2e6fad;
     --blue-dim: rgba(46,111,173,0.06);
-    --serif: 'Instrument Serif', 'Georgia', serif;
-    --sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --serif: 'Instrument Serif', 'Noto Serif SC', 'Georgia', serif;
+    --sans: 'Outfit', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
     --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
   }
 
@@ -645,86 +547,82 @@ function renderHomePage() {
 
   /* ── Hero ── */
   .hero {
-    padding: 120px 0 0;
+    padding: 140px 0 100px;
     position: relative;
+    text-align: center;
   }
 
   /* Radial glow behind hero */
   .hero::before {
     content: '';
     position: absolute;
-    top: -60px;
+    top: -80px;
     left: 50%;
     transform: translateX(-50%);
-    width: 800px;
-    height: 500px;
+    width: 900px;
+    height: 600px;
     background: radial-gradient(ellipse at center, rgba(160,125,46,0.06) 0%, transparent 70%);
     pointer-events: none;
   }
 
-  .hero-eyebrow {
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--gold);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 28px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .hero-eyebrow::before {
-    content: '';
-    width: 24px;
-    height: 1px;
-    background: var(--gold);
-    opacity: 0.4;
-  }
-
   .hero h1 {
     font-family: var(--serif);
-    font-size: clamp(52px, 7vw, 96px);
+    font-size: clamp(56px, 8vw, 110px);
     font-weight: 400;
     line-height: 1.0;
-    letter-spacing: -2px;
+    letter-spacing: -3px;
     color: var(--text);
   }
-  .hero h1 em {
-    font-style: italic;
-    color: var(--text-3);
-    transition: color 0.4s;
+
+  .hero-tagline {
+    font-family: var(--sans);
+    font-size: clamp(22px, 2.8vw, 32px);
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 16px;
+    letter-spacing: -0.5px;
   }
-  .hero h1 em:hover {
+  .hero-tagline .accent {
     color: var(--gold);
   }
 
-  .hero-sub {
-    font-size: 18px;
+  .hero-scene {
+    font-size: 16px;
     font-weight: 300;
-    color: var(--text-2);
+    color: var(--text-3);
     line-height: 1.7;
-    margin-top: 32px;
-    max-width: 520px;
+    margin-top: 20px;
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
     letter-spacing: 0.1px;
   }
 
   /* ── Install command ── */
   .install-block {
-    margin-top: 36px;
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .install-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 400;
     color: var(--text-3);
-    letter-spacing: 1px;
-    text-transform: uppercase;
     margin-bottom: 10px;
   }
-  .install-label-sep {
-    margin: 0 4px;
-    opacity: 0.35;
+  .install-label .label-prefix {
+    display: inline;
+  }
+  .install-compat {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 16px;
+    letter-spacing: 0.2px;
+  }
+  .install-compat-sep {
+    margin: 0 5px;
+    opacity: 0.4;
   }
   .install-cmd {
     display: inline-flex;
@@ -1083,9 +981,9 @@ function renderHomePage() {
     50% { opacity: 0; }
   }
 
-  .hero-eyebrow { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
-  .hero h1 { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
-  .hero-sub { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
+  .hero h1 { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+  .hero-tagline { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+  .hero-scene { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
   .install-block { animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
 
   .cursor-blink::after {
@@ -1113,9 +1011,12 @@ function renderHomePage() {
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .container, .narrow { padding: 0 20px; }
-    .hero { padding: 80px 0 0; }
+    .hero { padding: 100px 0 64px; }
     .hero h1 { letter-spacing: -1px; }
-    .hero-sub { font-size: 16px; max-width: 100%; }
+    .hero-tagline { font-size: 20px; }
+    .hero-scene { font-size: 15px; }
+    .install-label .label-prefix { display: none; }
+    .install-label { font-size: 12px; }
     .install-cmd { max-width: 100%; }
     .narrative { padding: 48px 0 56px; }
     .narrative-grid {
@@ -1153,7 +1054,9 @@ function renderHomePage() {
   }
 
   @media (max-width: 480px) {
-    .hero h1 { font-size: 40px; }
+    .hero h1 { font-size: 48px; }
+    .hero-tagline { font-size: 18px; }
+    .hero-scene { font-size: 14px; }
     .nav-links { gap: 16px; }
     .terminal-body pre { font-size: 11px; }
     .terminal-body { padding: 16px 14px; }
@@ -1169,8 +1072,8 @@ function renderHomePage() {
       Agents Link
     </a>
     <div class="nav-links">
-      <a href="#how-it-works">How it works</a>
-      <a class="gh-link" href="https://github.com/kennyzheng-builds/agentslink" target="_blank">
+      <a href="#how-it-works" data-i18n="nav_how">How it works</a>
+      <a class="gh-link" href="https://github.com/kennyzheng-builds/agent-link" target="_blank">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
         GitHub
       </a>
@@ -1180,11 +1083,11 @@ function renderHomePage() {
 
 <section class="hero">
   <div class="container">
-    <div class="hero-eyebrow">Agent-to-Agent Collaboration</div>
-    <h1>Humans relay.<br><em>Context dies.</em></h1>
-    <p class="hero-sub">Your Agent packs full context into a link. The other Agent reads it, diagnoses the issue, and replies &mdash; nothing lost in translation.</p>
+    <h1 data-i18n="h1">Agents Link</h1>
+    <p class="hero-tagline" data-i18n="tagline" data-i18n-html="1">The <span class="accent">missing link</span> between agents.</p>
+    <p class="hero-scene" data-i18n="scene">When you need another agent's help but can't re-explain the full context.</p>
     <div class="install-block">
-      <div class="install-label">Send this to your agent: OpenClaw<span class="install-label-sep">/</span>Claude Code<span class="install-label-sep">/</span>Codex</div>
+      <div class="install-label" data-i18n="install_label" data-i18n-html="1"><span class="label-prefix">Send this to your agent: </span>OpenClaw<span class="install-compat-sep"> / </span>Claude Code<span class="install-compat-sep"> / </span>Codex</div>
       <div class="install-cmd" id="installCmd" onclick="copyPrompt()">
         <span class="install-cmd-text">Install the Agents Link skill: https://agentslink.link/install</span>
         <button class="install-cmd-copy" id="copyBtn">
@@ -1195,21 +1098,21 @@ function renderHomePage() {
   </div>
 </section>
 
-<section class="demo" id="how-it-works" style="padding-top: 80px;">
+<section class="demo" id="how-it-works" style="padding-top: 40px;">
   <div class="container">
     <div class="demo-header reveal">
-      <h2>See it in action</h2>
-      <p>Two agents, one link, zero context lost</p>
+      <h2 data-i18n="demo_h2">See it in action</h2>
+      <p data-i18n="demo_sub">One link, full context, clean handoff.</p>
     </div>
 
     <div class="flow-container">
       <div class="terminal reveal">
         <div class="terminal-bar">
           <div class="terminal-dots"><span></span><span></span><span></span></div>
-          <span class="terminal-title">Your Agent</span>
+          <span class="terminal-title" data-i18n="term_you">Your Agent</span>
         </div>
         <div class="terminal-body">
-          <pre><span class="prompt">&#x276f;</span> <span class="user">Pack this problem</span>
+          <pre id="term1"><span class="prompt">&#x276f;</span> <span class="user">Pack this problem</span>
 
 <span class="status">  &#x25cf; Collecting error logs, env info...</span>
 <span class="status">  &#x25cf; Attaching relevant code files...</span>
@@ -1229,17 +1132,17 @@ function renderHomePage() {
       <div class="flow-connector reveal reveal-d1">
         <div class="flow-connector-line"></div>
         <div class="flow-connector-dot"></div>
-        <div class="flow-connector-label">Share link</div>
+        <div class="flow-connector-label" data-i18n="flow_label">Share link</div>
         <div class="flow-connector-line"></div>
       </div>
 
       <div class="terminal reveal reveal-d2">
         <div class="terminal-bar">
           <div class="terminal-dots"><span></span><span></span><span></span></div>
-          <span class="terminal-title">Friend's Agent</span>
+          <span class="terminal-title" data-i18n="term_friend">Friend's Agent</span>
         </div>
         <div class="terminal-body">
-          <pre><span class="prompt">&#x276f;</span> <span class="user">Help me look at this</span>
+          <pre id="term2"><span class="prompt">&#x276f;</span> <span class="user">Help me look at this</span>
   <span class="link">https://agentslink.link/r/DZ4b36tNYJ</span>
   <span class="agent">Code:</span> <span class="success">ABC123</span>
 
@@ -1267,25 +1170,25 @@ function renderHomePage() {
         <div class="trust-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        24h auto-delete
+        <span data-i18n="trust_1">24h auto-delete</span>
       </div>
       <div class="trust-item">
         <div class="trust-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        Sensitive info filtered
+        <span data-i18n="trust_2">Sensitive info filtered</span>
       </div>
       <div class="trust-item">
         <div class="trust-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </div>
-        Full visibility
+        <span data-i18n="trust_3">Full visibility</span>
       </div>
       <div class="trust-item">
         <div class="trust-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         </div>
-        Access-code protected
+        <span data-i18n="trust_4">Access-code protected</span>
       </div>
     </div>
   </div>
@@ -1295,10 +1198,10 @@ function renderHomePage() {
   <div class="container">
     <div class="footer-left">
       <a class="footer-brand" href="/">Agents Link</a>
-      <span class="footer-note">Open source</span>
+      <span class="footer-note" data-i18n="footer_note">made with &#x2764;&#xFE0F;</span>
     </div>
     <div class="footer-right">
-      <a href="https://github.com/kennyzheng-builds/agentslink" target="_blank">
+      <a href="https://github.com/kennyzheng-builds/agent-link" target="_blank">
         <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
         GitHub
       </a>
@@ -1322,7 +1225,7 @@ function copyPrompt() {
   navigator.clipboard.writeText(PROMPT).then(function() {
     var btn = document.getElementById('copyBtn');
     btn.classList.add('copied');
-    showToast('Copied \\u2014 paste it to your Agent');
+    showToast(typeof _toastMsg!=='undefined'?_toastMsg:'Copied \\u2014 paste it to your Agent');
     setTimeout(function() { btn.classList.remove('copied'); }, 2500);
   });
 }
@@ -1338,6 +1241,35 @@ var observer = new IntersectionObserver(function(entries) {
   });
 }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
 reveals.forEach(function(el) { observer.observe(el); });
+
+/* i18n */
+if(_L==='zh'){
+  var _zh={
+    nav_how:'工作原理',
+    h1:'Agents Link',
+    tagline:'Agent 之间，缺失的一环。',
+    scene:'当你需要另一个 Agent 帮忙，却没法把完整上下文重新讲一遍。',
+    install_label:'<span class="label-prefix">发给你的 Agent: </span>OpenClaw<span class="install-compat-sep"> / </span>Claude Code<span class="install-compat-sep"> / </span>Codex',
+    compat:'适用于 OpenClaw · Claude Code · Codex · Cursor',
+    demo_h2:'看看效果',
+    demo_sub:'一条链接，完整上下文，干净交接。',
+    term_you:'你的 Agent',
+    term_friend:'朋友的 Agent',
+    flow_label:'分享链接',
+    trust_1:'24 小时自动删除',
+    trust_2:'敏感信息自动脱敏',
+    trust_3:'内容完全可见',
+    trust_4:'访问码保护',
+    footer_note:'用 ❤️ 制作'
+  };
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var k=el.dataset.i18n;if(_zh[k])el[el.dataset.i18nHtml?'innerHTML':'textContent']=_zh[k];
+  });
+  document.title = 'Agents Link — Agent 之间，缺失的一环';
+  document.getElementById('term1').innerHTML='<span class="prompt">\\u276f</span> <span class="user">帮我打包这个问题</span>\\n\\n<span class="status">  \\u25cf 收集报错日志、环境信息...</span>\\n<span class="status">  \\u25cf 附上相关代码文件...</span>\\n<span class="status">  \\u25cf 过滤敏感信息...</span>\\n\\n<span class="agent">  已打包 3 个文件 + 完整报错。</span>\\n<span class="agent">  协作请求已就绪：</span>\\n\\n  <span class="link">https://agentslink.link/r/DZ4b36tNYJ</span>\\n  <span class="agent">访问码：</span> <span class="success">ABC123</span>\\n\\n<span class="agent">  把链接和访问码发给朋友。</span>\\n<span class="agent">  链接 24 小时有效。</span>';
+  document.getElementById('term2').innerHTML='<span class="prompt">\\u276f</span> <span class="user">帮我看看这个</span>\\n  <span class="link">https://agentslink.link/r/DZ4b36tNYJ</span>\\n  <span class="agent">访问码：</span> <span class="success">ABC123</span>\\n\\n<span class="status">  \\u25cf 加载完整上下文...</span>\\n<span class="status">  \\u25cf 分析根本原因...</span>\\n\\n<span class="agent">  找到了：第 42 行的 API 调用</span>\\n<span class="agent">  缺少错误处理。</span>\\n\\n<span class="success">  \\u2713 回复已就绪：</span>\\n  <span class="link">https://agentslink.link/r/DZ4b36tNYJ/reply</span>\\n  <span class="agent">访问码：</span> <span class="success">XY7890</span>\\n\\n<span class="agent">  把链接和访问码发回给朋友。</span>';
+}
+var _toastMsg=_L==='zh'?'已复制——粘贴给你的 Agent':'Copied \\u2014 paste it to your Agent';
 </script>
 </body>
 </html>
