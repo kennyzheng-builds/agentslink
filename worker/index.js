@@ -553,7 +553,7 @@ function renderHomePage() {
     justify-content: center;
     position: relative;
     text-align: center;
-    padding: 80px 0 60px;
+    padding: 0 0 100px;
     overflow: hidden;
   }
   .hero > .container {
@@ -575,32 +575,32 @@ function renderHomePage() {
 
   .hero h1 {
     font-family: var(--serif);
-    font-size: clamp(64px, 11vw, 160px);
+    font-size: clamp(48px, 8vw, 120px);
     font-weight: 400;
     line-height: 1.0;
-    letter-spacing: -4px;
+    letter-spacing: -3px;
     color: var(--text);
   }
 
   .hero-tagline {
     font-family: var(--sans);
-    font-size: clamp(22px, 2.5vw, 30px);
+    font-size: clamp(26px, 3.5vw, 44px);
     font-weight: 600;
     color: var(--text);
-    margin-top: 24px;
-    letter-spacing: -0.3px;
+    margin-top: 20px;
+    letter-spacing: -0.5px;
   }
   .hero-tagline .accent {
     color: var(--gold);
   }
 
   .hero-scene {
-    font-size: 16px;
+    font-size: clamp(16px, 1.4vw, 19px);
     font-weight: 300;
     color: var(--text-3);
     line-height: 1.7;
-    margin-top: 20px;
-    max-width: 560px;
+    margin-top: 24px;
+    max-width: 600px;
     margin-left: auto;
     margin-right: auto;
     letter-spacing: 0.1px;
@@ -614,13 +614,14 @@ function renderHomePage() {
     align-items: center;
   }
   .install-label {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 400;
     color: var(--text-3);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
   .install-label .label-prefix {
     display: inline;
+    margin-right: 6px;
   }
   .install-compat {
     font-size: 13px;
@@ -629,7 +630,7 @@ function renderHomePage() {
     letter-spacing: 0.2px;
   }
   .install-compat-sep {
-    margin: 0 5px;
+    margin: 0 6px;
     opacity: 0.4;
   }
   .install-cmd {
@@ -1020,10 +1021,10 @@ function renderHomePage() {
   @media (max-width: 768px) {
     .container, .narrow { padding: 0 20px; }
     .hero { min-height: auto; padding: 100px 0 64px; }
-    .hero h1 { letter-spacing: -2px; }
-    .hero-tagline { font-size: 20px; }
+    .hero h1 { letter-spacing: -1px; }
+    .hero-tagline { font-size: 24px; }
     .hero-scene { font-size: 15px; }
-    .install-label { font-size: 11px; white-space: nowrap; }
+    .install-label { font-size: 12px; white-space: nowrap; }
     .install-cmd { max-width: 100%; overflow: hidden; }
     .install-cmd-text { overflow: hidden; text-overflow: ellipsis; }
     .narrative { padding: 48px 0 56px; }
@@ -1062,8 +1063,8 @@ function renderHomePage() {
   }
 
   @media (max-width: 480px) {
-    .hero h1 { font-size: 48px; }
-    .hero-tagline { font-size: 18px; }
+    .hero h1 { font-size: 42px; }
+    .hero-tagline { font-size: 20px; }
     .hero-scene { font-size: 14px; }
     .install-label { font-size: 10px; }
     .nav-links { gap: 16px; }
@@ -1093,10 +1094,10 @@ function renderHomePage() {
 <section class="hero">
   <div class="container">
     <h1 data-i18n="h1">Agents Link</h1>
-    <p class="hero-tagline" data-i18n="tagline" data-i18n-html="1">The <span class="accent">missing link</span> between agents.</p>
+    <p class="hero-tagline" data-i18n="tagline" data-i18n-html="1">The <span class="accent">missing link</span> between agents</p>
     <p class="hero-scene" data-i18n="scene">When you need another agent's help but can't re-explain the full context.</p>
     <div class="install-block">
-      <div class="install-label" data-i18n="install_label" data-i18n-html="1"><span class="label-prefix">Send this to your agent: </span>OpenClaw<span class="install-compat-sep"> / </span>Claude Code<span class="install-compat-sep"> / </span>Codex</div>
+      <div class="install-label" data-i18n="install_label" data-i18n-html="1"><span class="label-prefix">Send this to your agent:</span>OpenClaw<span class="install-compat-sep">/</span>Claude Code<span class="install-compat-sep">/</span>Codex</div>
       <div class="install-cmd" id="installCmd" onclick="copyPrompt()">
         <span class="install-cmd-text">Install the Agents Link skill: https://agentslink.link/install</span>
         <button class="install-cmd-copy" id="copyBtn">
@@ -1256,9 +1257,9 @@ if(_L==='zh'){
   var _zh={
     nav_how:'工作原理',
     h1:'Agents Link',
-    tagline:'Agent 之间，缺失的一环。',
+    tagline:'Agent 之间，缺失的一环',
     scene:'当你需要另一个 Agent 帮忙，却没法把完整上下文重新讲一遍。',
-    install_label:'<span class="label-prefix">发给你的 Agent: </span>OpenClaw<span class="install-compat-sep"> / </span>Claude Code<span class="install-compat-sep"> / </span>Codex',
+    install_label:'<span class="label-prefix">发给你的 Agent:</span>OpenClaw<span class="install-compat-sep">/</span>Claude Code<span class="install-compat-sep">/</span>Codex',
     compat:'适用于 OpenClaw · Claude Code · Codex · Cursor',
     demo_h2:'看看效果',
     demo_sub:'一条链接，完整上下文，干净交接。',
