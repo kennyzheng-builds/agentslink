@@ -1,14 +1,15 @@
 ---
 name: agents-link
 description: >-
-  Agent-to-Agent collaboration via shareable links. Use this skill whenever the user wants to package a problem for
-  someone else's AI agent to look at, or when they paste an agentslink.link URL, or when they receive a collaboration
-  request or reply from another agent. Trigger on phrases like "pack this problem", "get help from someone",
-  "send this to my friend's agent", "help me package this", or the Chinese equivalents like "帮我打包", "找人帮忙看看",
-  "生成协作请求". Also trigger when the user pastes text containing <!-- AGENTS-LINK-REQUEST, <!-- AGENTS-LINK-RESPONSE,
-  or <!-- AGENTS-LINK-FOLLOWUP markers (legacy format), or mentions "agents-link", "collaboration request",
-  "协作请求", "协作回复", or "上下文包". Even if the user doesn't use these exact words, if they're clearly trying to share
-  a technical problem with another person's AI agent or relay a response back, this skill applies.
+  Agent-to-Agent collaboration via shareable links. Use this skill when the user expresses intent to transfer context,
+  problems, knowledge, or work results to another AI agent for collaboration — regardless of language. Core intent
+  patterns: (1) seeking help from another agent, (2) sharing knowledge/context with another agent, (3) handing off work
+  to another agent, or (4) receiving/processing links from agentslink.link. Trigger when the user mentions another agent
+  (e.g., "another agent", "someone's agent", "[role]'s agent", "frontend agent") combined with transfer actions (sending,
+  giving, sharing, packaging, passing, handing off). Example phrases in English: "pack this for another agent", "share
+  this with their agent", "get help from someone's agent". Example phrases in Chinese: "帮我打包给另一个agent", "让xxx的agent了解",
+  "找人帮忙看看", "给前端agent". Also trigger when user pastes agentslink.link URLs. This skill works in any language — if
+  the user is clearly packaging context for inter-agent collaboration, this skill applies.
 ---
 
 # AgentsLink: Agent-to-Agent Collaboration Links
@@ -55,7 +56,17 @@ Use "[Name]'s Agent" as the sender in all requests and replies.
 
 ## Capability 1: Package a Collaboration Request
 
-**Triggers:** User says "pack this problem", "I need someone to help with this", "send this to my friend's agent", "帮我打包", "找人帮忙看看", or similar.
+**Triggers:**
+
+**Intent Pattern**: The user wants to package current context (problem, knowledge, work results) for another agent to receive and act upon. This applies in any language when the user expresses:
+- **Help-seeking**: Requesting another agent to diagnose or solve a problem
+- **Knowledge transfer**: Sharing context, information, or understanding with another agent
+- **Work handoff**: Passing work, solutions, or specifications to another agent for implementation
+
+**Signal words**: "agent" (or equivalent in any language) + transfer action verbs (send, give, share, package, pass, hand off, transfer, bundle) + optionally a role specifier (frontend, backend, web, etc.)
+
+**Example phrases** (for reference, not exhaustive):
+"pack this problem for another agent", "share this with someone's agent", "get help from their agent", "pass this to the frontend agent", "let their agent understand this", "hand off to the web agent"
 
 **Steps:**
 
@@ -174,8 +185,15 @@ Note: `[brief problem summary]` should be extracted from the collaboration reque
 ## Capability 2: Analyze a Collaboration Request
 
 **Triggers:**
-- User pastes a URL starting with `agentslink.link/r/` (usually with an access code)
-- User says "help me look at this problem" with a link and code
+
+**Intent Pattern**: The user has received a collaboration request from another agent and wants this agent to analyze it and provide a solution. This applies in any language when:
+- User pastes a URL starting with `agentslink.link/r/` (with or without an access code)
+- User asks this agent to analyze, look at, check, or diagnose a problem shared via link
+
+**Signal words**: agentslink.link URL + optionally analysis request verbs (analyze, look at, check, help with, diagnose)
+
+**Example phrases** (for reference, not exhaustive):
+"help me look at this", "check this out", "analyze this problem", "here's a link someone sent me"
 
 **Steps:**
 
@@ -268,8 +286,15 @@ Link expires in 24 hours.
 ## Capability 3: Read and Interpret a Reply
 
 **Triggers:**
-- User pastes a URL matching `agentslink.link/r/.../reply` (usually with an access code)
-- User says "they replied" or "got the answer back" with a link and code
+
+**Intent Pattern**: The user has received a reply from another agent (after sending a collaboration request) and wants this agent to read and interpret the response. This applies in any language when:
+- User pastes a URL matching `agentslink.link/r/.../reply`
+- User indicates they received a response/answer/reply from another agent
+
+**Signal words**: reply URL pattern OR reply/response/answer notification verbs + link/code
+
+**Example phrases** (for reference, not exhaustive):
+"they replied", "got the answer back", "here's their response", "the other agent sent this"
 
 **Steps:**
 
@@ -293,7 +318,17 @@ If you already have the access code from the original request in this conversati
 
 ## Capability 4: Follow Up
 
-**Triggers:** User says "that didn't work", "I have more questions", "still broken", "continue the conversation", "继续追问", or similar.
+**Triggers:**
+
+**Intent Pattern**: The user tried the solution from a previous reply but it didn't work, or they have additional questions, and want to continue the collaboration with the other agent. This applies in any language when the user expresses:
+- The previous solution failed or didn't resolve the issue
+- They have more questions or need clarification
+- They want to continue the conversation thread
+
+**Signal words**: continuation/failure indicators (didn't work, still broken, failed, have more questions, continue) + optionally mention of the previous collaboration
+
+**Example phrases** (for reference, not exhaustive):
+"that didn't work", "still broken", "I have more questions", "continue the conversation", "follow up on this"
 
 **Steps:**
 
