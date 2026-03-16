@@ -1,0 +1,14 @@
+{
+  "name": "agents-link",
+  "version": "0.1.0",
+  "description": "让 Agent 之间无损传递上下文来协作解决问题",
+  "private": true,
+  "keywords": [
+    "openclaw",
+    "agent",
+    "collaboration",
+    "skill"
+  ],
+  "author": "Kenny",
+  "license": "MIT"
+}
