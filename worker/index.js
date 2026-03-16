@@ -692,8 +692,8 @@ function pageShell(title, body, script) {
 var _lang=/^zh/i.test(navigator.language)?'zh':'en';
 document.documentElement.lang=_lang==='zh'?'zh-CN':'en';
 var _i18n={
-  zh:{expire:'链接 24 小时后过期',type_req:'协作请求',type_reply:'协作回复',intro:'以下是 Agent 间协作的完整内容',copyLink:'复制链接',copy:'复制',copied:'已复制',toastLink:'已复制，把链接发给你的 Agent 吧',toastCopy:'内容已复制',hasReply:'已收到 <a href="{replyUrl}">协作回复</a>',reqRef:'回复 <a href="{reqUrl}">{from} 的协作请求</a>'},
-  en:{expire:'Link expires in 24h',type_req:'Collaboration Request',type_reply:'Collaboration Reply',intro:'Full content of this agent-to-agent collaboration',copyLink:'Copy link',copy:'Copy',copied:'Copied',toastLink:'Copied — send this link to your Agent',toastCopy:'Content copied',hasReply:'Has <a href="{replyUrl}">reply</a>',reqRef:'Reply to <a href="{reqUrl}">{from}\'s request</a>'}
+  zh:{expire:'链接 24 小时后过期',type_req:'协作请求',type_reply:'协作回复',intro:'以下是 Agent 会看到的完整内容，敏感信息已自动脱敏',copyLink:'复制链接',copy:'复制',copied:'已复制',toastLink:'已复制，把链接和访问码发给你的 Agent 吧',toastCopy:'内容已复制',hasReply:'已收到 <a href="{replyUrl}">协作回复</a>',reqRef:'回复 <a href="{reqUrl}">{from} 的协作请求</a>'},
+  en:{expire:'Link expires in 24h',type_req:'Collaboration Request',type_reply:'Collaboration Reply',intro:'Below is the full content your Agent will see — sensitive info is auto-redacted',copyLink:'Copy link',copy:'Copy',copied:'Copied',toastLink:'Copied — send this link and code to your Agent',toastCopy:'Content copied',hasReply:'Has <a href="{replyUrl}">reply</a>',reqRef:'Reply to <a href="{reqUrl}">{from}\'s request</a>'}
 };
 var _t=_i18n[_lang];
 document.querySelectorAll('[data-i18n]').forEach(function(el){
@@ -945,8 +945,11 @@ function renderRequestPage(data, id, origin, hasReply, accessCode) {
   const title = extractTitle(data.content) || 'Collaboration Request';
   const time = formatTime(data.created_at);
   const contentHtml = renderMarkdown(data.content);
+  const category = detectCategory(data.content);
+  const linkUrl = `${origin}/r/${id}`;
   const replyUrl = accessCode ? `${origin}/r/${id}/reply?code=${accessCode}` : `${origin}/r/${id}/reply`;
 
+  const categoryTag = category !== 'other' ? `<span class="sep">/</span><span class="dim">${esc(category)}</span>` : '';
   const replyBadge = hasReply
     ? `<span class="sep">/</span><span data-i18n="hasReply" data-i18n-html="1">已收到 <a href="${esc(replyUrl)}">协作回复</a></span>`
     : '';
@@ -959,17 +962,22 @@ function renderRequestPage(data, id, origin, hasReply, accessCode) {
       <span class="from">${esc(data.from)}</span>
       <span class="sep">/</span>
       <span>${esc(time)}</span>
+      ${categoryTag}
       ${replyBadge}
     </div>
   </div>
   <hr class="divider">
   <div class="json-intro">
-    <span class="json-intro-text" data-i18n="intro">以下是 Agent 间协作的完整内容</span>
+    <span class="json-intro-text" data-i18n="intro">以下是 Agent 会看到的完整内容，敏感信息已自动脱敏</span>
+    <button class="copy-link-btn" id="ctaBtn" onclick="copyLink()">
+      ${COPY_SVG}
+      <span id="ctaText" data-i18n="copyLink">复制链接</span>
+    </button>
   </div>
   <div class="json-card">
     <div class="json-card-header">
       <div class="traffic-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
-      <span class="json-card-filename">${esc(data.from)} → Collaboration Request</span>
+      <span class="json-card-filename">GET /r/${esc(id)}</span>
     </div>
     <div class="copy-overlay">
       <button class="copy-json-btn" id="copyCodeBtn" onclick="copyContent()">
@@ -980,8 +988,11 @@ function renderRequestPage(data, id, origin, hasReply, accessCode) {
     <div class="json-card-body md-body">${contentHtml}</div>
   </div>`;
 
+  const copyText = accessCode ? `${linkUrl}?code=${accessCode}` : linkUrl;
   const script = `
 var _rawContent=${JSON.stringify(data.content)};
+var _copyLink=${JSON.stringify(copyText)};
+function copyLink(){navigator.clipboard.writeText(_copyLink).then(function(){var b=document.getElementById('ctaBtn'),t=document.getElementById('ctaText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastLink);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copyLink},2000)})}
 function copyContent(){navigator.clipboard.writeText(_rawContent).then(function(){var b=document.getElementById('copyCodeBtn'),t=document.getElementById('copyCodeText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastCopy);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copy},2000)})}`;
 
   return pageShell(`Agents Link - ${title}`, body, script);
@@ -993,6 +1004,7 @@ function renderReplyPage(data, id, origin, reqData, accessCode) {
   const title = reqData ? (extractTitle(reqData.content) || 'Collaboration Reply') : 'Collaboration Reply';
   const time = formatTime(data.created_at);
   const contentHtml = renderMarkdown(data.content);
+  const linkUrl = `${origin}/r/${id}/reply`;
   const reqUrl = accessCode ? `${origin}/r/${id}?code=${accessCode}` : `${origin}/r/${id}`;
 
   const reqRef = reqData
@@ -1012,12 +1024,16 @@ function renderReplyPage(data, id, origin, reqData, accessCode) {
   </div>
   <hr class="divider">
   <div class="json-intro">
-    <span class="json-intro-text" data-i18n="intro">以下是 Agent 间协作的完整内容</span>
+    <span class="json-intro-text" data-i18n="intro">以下是 Agent 会看到的完整内容，敏感信息已自动脱敏</span>
+    <button class="copy-link-btn" id="ctaBtn" onclick="copyLink()">
+      ${COPY_SVG}
+      <span id="ctaText" data-i18n="copyLink">复制链接</span>
+    </button>
   </div>
   <div class="json-card">
     <div class="json-card-header">
       <div class="traffic-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
-      <span class="json-card-filename">${esc(data.from)} → Collaboration Reply</span>
+      <span class="json-card-filename">GET /r/${esc(id)}/reply</span>
     </div>
     <div class="copy-overlay">
       <button class="copy-json-btn" id="copyCodeBtn" onclick="copyContent()">
@@ -1028,8 +1044,11 @@ function renderReplyPage(data, id, origin, reqData, accessCode) {
     <div class="json-card-body md-body">${contentHtml}</div>
   </div>`;
 
+  const copyText = accessCode ? `${linkUrl}?code=${accessCode}` : linkUrl;
   const script = `
 var _rawContent=${JSON.stringify(data.content)};
+var _copyLink=${JSON.stringify(copyText)};
+function copyLink(){navigator.clipboard.writeText(_copyLink).then(function(){var b=document.getElementById('ctaBtn'),t=document.getElementById('ctaText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastLink);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copyLink},2000)})}
 function copyContent(){navigator.clipboard.writeText(_rawContent).then(function(){var b=document.getElementById('copyCodeBtn'),t=document.getElementById('copyCodeText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastCopy);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copy},2000)})}`;
 
   return pageShell(`Agents Link - ${title}`, body, script);
