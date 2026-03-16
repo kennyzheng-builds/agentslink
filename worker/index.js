@@ -1796,7 +1796,7 @@ if(_L==='zh'){
     cta:'',
     install_label:'<span class="label-prefix">发给你的 Agent:</span>OpenClaw<span class="install-compat-sep">/</span>Claude Code<span class="install-compat-sep">/</span>Codex',
     compat:'',
-    demo_h2:'实际效果',
+    demo_h2:'如何操作',
     demo_sub:'一条链接，完整上下文，干净交接',
     term_you:'你的 Agent',
     term_friend:'朋友的 Agent',
