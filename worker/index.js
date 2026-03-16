@@ -553,52 +553,47 @@ const COPY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 function pageCSS() {
   return `
   :root {
-    --bg: #f8f6f1; --surface: #efece6; --surface-2: #e6e3dc;
-    --border: #dbd7ce; --border-light: #cec9c0;
-    --text: #1a1714; --text-2: #5e5950; --text-3: #9a958c;
-    --gold: #a07d2e; --gold-dim: rgba(160,125,46,0.07); --gold-mid: rgba(160,125,46,0.12);
-    --green: #2e8c47; --green-dim: rgba(46,140,71,0.07);
-    --blue: #2e6fad;
-    --serif: 'Instrument Serif','Georgia',serif;
-    --sans: 'Outfit',-apple-system,BlinkMacSystemFont,sans-serif;
-    --mono: 'JetBrains Mono','SF Mono','Fira Code',monospace;
+    --bg: #faf9f6; --surface: #ffffff;
+    --border: #e5e3dc; --border-light: #eceae4;
+    --text: #1a1a18; --text-secondary: #55534c; --text-dim: #8a8880;
+    --accent: #9e7c2e; --accent-dim: rgba(158, 124, 46, 0.08);
+    --sage: #3d7a47; --sage-dim: rgba(61, 122, 71, 0.07);
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;font-kerning:normal;overflow-x:hidden}
-  ::selection{background:var(--gold-mid);color:var(--text)}
-  body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px}
-  .wrapper{max-width:720px;margin:0 auto;padding:0 32px}
-  nav{padding:24px 0;position:relative;z-index:10}
-  nav .wrapper{display:flex;align-items:center;justify-content:space-between}
-  .nav-brand{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--text);text-decoration:none;letter-spacing:-0.3px;display:flex;align-items:center;gap:10px}
-  .nav-brand .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold-mid)}
-  .nav-links{display:flex;align-items:center;gap:28px}
-  .nav-links a{font-size:13px;font-weight:400;color:var(--text-3);text-decoration:none;transition:color .2s;letter-spacing:0.2px}
-  .nav-links a:hover{color:var(--text-2)}
-  .nav-links .gh-link{display:inline-flex;align-items:center;gap:6px}
-  .nav-links .gh-link svg{width:15px;height:15px}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
+  .wrapper{max-width:720px;margin:0 auto;padding:0 28px}
+  .topbar{padding:20px 0;border-bottom:1px solid var(--border-light)}
+  .topbar .wrapper{display:flex;align-items:center;justify-content:space-between}
+  .topbar-brand{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text-secondary);text-decoration:none}
+  .topbar-brand strong{color:var(--text);font-weight:500}
+  .topbar-expire{font-size:12px;font-family:var(--mono);color:var(--text-dim)}
   .header{padding:48px 0 36px}
   .header-type{font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
-  .header-type.request{color:var(--gold)}
-  .header-type.reply{color:var(--green)}
-  .header-title{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--text);line-height:1.3;letter-spacing:-0.3px;margin-bottom:16px}
-  .header-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px;color:var(--text-2);line-height:1.6}
+  .header-type.request{color:var(--accent)}
+  .header-type.reply{color:var(--sage)}
+  .header-title{font-size:26px;font-weight:600;color:#111110;line-height:1.35;letter-spacing:-0.4px;margin-bottom:16px}
+  .header-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px;color:var(--text-secondary);line-height:1.6}
   .header-meta .from{font-weight:500;color:var(--text)}
   .header-meta .sep{color:var(--border);margin:0 2px}
-  .header-meta .dim{color:var(--text-3)}
-  .header-meta a{color:var(--text-2);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border);transition:text-decoration-color .15s}
-  .header-meta a:hover{text-decoration-color:var(--text-2)}
+  .header-meta .dim{color:var(--text-dim)}
+  .header-meta a{color:var(--text-secondary);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border);transition:text-decoration-color 0.15s}
+  .header-meta a:hover{text-decoration-color:var(--text-secondary)}
+  .header-meta .from a{color:inherit}
   .divider{border:none;border-top:1px solid var(--border);margin:0 0 24px}
-  .json-card{border-radius:12px;overflow:hidden;margin-bottom:48px;box-shadow:0 4px 24px rgba(0,0,0,.10),0 1px 4px rgba(0,0,0,.06);position:relative}
-  .json-card-header{display:flex;align-items:center;padding:14px 20px;background:#1a1a1e;gap:12px}
+  .json-card{border-radius:12px;overflow:hidden;margin-bottom:48px;box-shadow:0 2px 8px rgba(0,0,0,0.08);position:relative}
+  .terminal-instructions{margin-top:20px;padding-top:16px;border-top:1px solid #333;font-family:var(--mono);font-size:12px;line-height:1.7;color:#666}
+  .terminal-instructions a{color:#7aafcf;text-decoration:none}
+  .terminal-instructions a:hover{text-decoration:underline}
+  .json-card-header{display:flex;align-items:center;padding:14px 20px;background:#1c1c1c;gap:12px}
   .traffic-dots{display:flex;gap:7px}
   .traffic-dots span{width:12px;height:12px;border-radius:50%}
   .traffic-dots .dot-red{background:#ff5f57}
   .traffic-dots .dot-yellow{background:#febc2e}
   .traffic-dots .dot-green{background:#28c840}
   .json-card-filename{font-family:var(--mono);font-size:12px;color:#888;margin-left:4px}
-  .json-card-body{background:#1a1a1e;padding:24px;overflow-x:auto}
+  .json-card-body{background:#1e1e1e;padding:24px;overflow-x:auto}
   .json-card-body pre{font-family:var(--mono);font-size:13px;line-height:1.7;color:#c9c9c9;white-space:pre-wrap;word-wrap:break-word;margin:0}
   .j-key{color:#7aafcf} .j-str{color:#c3a76c} .j-brace{color:#888} .j-colon{color:#888}
   .md-body{font-family:var(--sans);font-size:14px;line-height:1.8;color:#d4d4d4}
@@ -618,35 +613,37 @@ function pageCSS() {
   .md-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
   .md-table th{text-align:left;padding:6px 10px;border-bottom:2px solid #333;color:#aaa;font-weight:600}
   .md-table td{padding:6px 10px;border-bottom:1px solid #252525;color:#c9c9c9}
-  .json-card .copy-overlay{position:absolute;top:52px;right:12px;opacity:0;transition:opacity .15s ease;z-index:5}
+  .json-card .copy-overlay{position:absolute;top:52px;right:12px;opacity:0;transition:opacity 0.15s ease;z-index:5}
   .json-card:hover .copy-overlay{opacity:1}
-  .copy-json-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;background:#2a2a2a;border:1px solid #444;border-radius:6px;color:#aaa;font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s}
+  .copy-json-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;background:#2a2a2a;border:1px solid #444;border-radius:6px;color:#aaa;font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s}
   .copy-json-btn:hover{background:#333;color:#ddd;border-color:#555}
   .copy-json-btn.copied{color:#7cc688;border-color:#5a9e66}
   .copy-json-btn svg{width:13px;height:13px}
-  .json-intro{margin-bottom:16px}
-  .json-intro-text{font-size:13px;color:var(--text-3);line-height:1.5}
-  footer{border-top:1px solid var(--border);padding:24px 0;margin-top:16px}
-  footer .wrapper{display:flex;align-items:center;justify-content:space-between}
-  .footer-left{display:flex;align-items:baseline;gap:12px}
+  .json-intro{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:16px}
+  .json-intro-text{font-size:13px;color:var(--text-dim);line-height:1.5}
+  .copy-link-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:var(--accent-dim);border:1px solid rgba(158, 124, 46, 0.2);border-radius:6px;color:var(--accent);font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0}
+  .copy-link-btn:hover{background:rgba(158, 124, 46, 0.12);border-color:rgba(158, 124, 46, 0.35)}
+  .copy-link-btn.copied{border-color:var(--sage);color:var(--sage);background:var(--sage-dim)}
+  .copy-link-btn svg{width:14px;height:14px}
+  .footer{border-top:1px solid var(--border-light);padding:20px 0;margin-top:16px}
+  .footer .wrapper{display:flex;align-items:center;justify-content:space-between}
+  .footer-left{display:flex;align-items:baseline;gap:10px}
   .footer-brand{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text);text-decoration:none}
-  .footer-note{font-size:11px;color:var(--text-3);font-weight:300}
-  .footer-right a{font-size:13px;color:var(--text-3);text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color .2s}
-  .footer-right a:hover{color:var(--text-2)}
-  .footer-right svg{width:15px;height:15px}
-  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(8px);background:#fff;border:1px solid var(--green);color:var(--green);padding:10px 24px;border-radius:8px;font-family:var(--mono);font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.06);opacity:0;transition:all .25s ease;pointer-events:none;z-index:100}
+  .footer-love{font-size:11px;color:var(--text-dim);letter-spacing:0.2px}
+  .footer-right a{font-family:var(--mono);font-size:12px;color:var(--text-dim);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color 0.15s}
+  .footer-right a:hover{color:var(--text-secondary)}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--surface);border:1px solid var(--sage);color:var(--sage);padding:10px 24px;border-radius:8px;font-family:var(--mono);font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,0.08);opacity:0;transition:all 0.25s ease;pointer-events:none;z-index:100}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .not-found{text-align:center;padding:120px 0}
-  .not-found h1{font-family:var(--serif);font-size:80px;font-weight:400;color:var(--border);letter-spacing:-2px}
-  .not-found p{font-size:16px;color:var(--text-3);margin-top:12px}
-  .not-found a{color:var(--gold);text-decoration:underline;text-underline-offset:3px}
+  .not-found h1{font-size:80px;font-weight:600;color:var(--border);letter-spacing:-2px}
+  .not-found p{font-size:16px;color:var(--text-dim);margin-top:12px}
+  .not-found a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
   @media(max-width:640px){
-    .header-title{font-size:26px}
+    .header-title{font-size:22px}
     .wrapper{padding:0 20px}
     .json-card-body{padding:20px 16px}
     .json-card-body pre{font-size:11.5px}
-    footer .wrapper{flex-direction:column;gap:10px;text-align:center}
-    .json-intro{flex-direction:column;align-items:flex-start;gap:10px}
+    .footer .wrapper{flex-direction:column;gap:8px}
   }`;
 }
 
@@ -657,50 +654,46 @@ function pageShell(title, body, script) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(title)}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>${pageCSS()}</style>
 </head>
 <body>
-<nav>
+<div class="topbar">
   <div class="wrapper">
-    <a class="nav-brand" href="/"><span class="dot"></span>Agents Link</a>
-    <div class="nav-links">
-      <span style="font-size:12px;font-family:var(--mono);color:var(--text-3)" data-i18n="expire">24h</span>
-      <a class="gh-link" href="https://github.com/kennyzheng-builds/agentslink" target="_blank">${GITHUB_SVG} GitHub</a>
-    </div>
+    <a class="topbar-brand" href="/"><strong>Agents Link</strong></a>
+    <span class="topbar-expire" data-i18n="expire">链接 24 小时后过期</span>
   </div>
-</nav>
+</div>
 <div class="wrapper">${body}</div>
-<footer>
+<div class="footer">
   <div class="wrapper">
     <div class="footer-left">
       <a class="footer-brand" href="/">Agents Link</a>
-      <span class="footer-note">Open source</span>
+      <span class="footer-love">made with &#x1F497;</span>
     </div>
     <div class="footer-right">
       <a href="https://github.com/kennyzheng-builds/agentslink" target="_blank">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
         GitHub
       </a>
     </div>
   </div>
-</footer>
+</div>
 <div class="toast" id="toast"></div>
 <script>
 var _lang=/^zh/i.test(navigator.language)?'zh':'en';
 document.documentElement.lang=_lang==='zh'?'zh-CN':'en';
+document.title=_lang==='zh'?'Agents Link - 协作请求':'Agents Link - Collaboration Request';
 var _i18n={
-  zh:{expire:'链接 24 小时后过期',type_req:'协作请求',type_reply:'协作回复',intro:'以下是 Agent 会看到的完整内容，敏感信息已自动脱敏',copyLink:'复制链接',copy:'复制',copied:'已复制',toastLink:'已复制，把链接和访问码发给你的 Agent 吧',toastCopy:'内容已复制',hasReply:'已收到 <a href="{replyUrl}">协作回复</a>',reqRef:'回复 <a href="{reqUrl}">{from} 的协作请求</a>'},
-  en:{expire:'Link expires in 24h',type_req:'Collaboration Request',type_reply:'Collaboration Reply',intro:'Below is the full content your Agent will see — sensitive info is auto-redacted',copyLink:'Copy link',copy:'Copy',copied:'Copied',toastLink:'Copied — send this link and code to your Agent',toastCopy:'Content copied',hasReply:'Has <a href="{replyUrl}">reply</a>',reqRef:'Reply to <a href="{reqUrl}">{from}\'s request</a>'}
+  zh:{expire:'链接 24 小时后过期',type_req:'协作请求',type_reply:'协作回复',intro:'Agent 可见内容，敏感信息已脱敏',copyLink:'复制链接',copy:'复制',copied:'已复制',toastLink:'已复制，把链接和访问码发给你的 Agent 吧',toastCopy:'内容已复制',hasReply:'已收到 <a href="{replyUrl}">协作回复</a>',reqRef:'回复 <a href="{reqUrl}">{from} 的协作请求</a>',skillHint:'_instructions: 请安装 <a href="https://agentslink.link/install" target="_blank">Agents Link skill</a> 以生成回复链接。该 skill 仅处理协作内容，不会收集任何隐私数据。'},
+  en:{expire:'Link expires in 24h',type_req:'Collaboration Request',type_reply:'Collaboration Reply',intro:'Content your Agent will see \\u2014 sensitive info redacted',copyLink:'Copy link',copy:'Copy',copied:'Copied',toastLink:'Copied \\u2014 send this link and code to your Agent',toastCopy:'Content copied',hasReply:'Replied \\u2014 <a href="{replyUrl}">view reply</a>',reqRef:'Reply to <a href="{reqUrl}">{from}\\u2019s request</a>',skillHint:'_instructions: Install <a href="https://agentslink.link/install" target="_blank">Agents Link skill</a> to generate a reply link. This skill only processes collaboration content and collects no private data.'}
 };
 var _t=_i18n[_lang];
+${script || ''}
 document.querySelectorAll('[data-i18n]').forEach(function(el){
   var k=el.dataset.i18n;if(_t[k])el[el.dataset.i18nHtml?'innerHTML':'textContent']=_t[k];
 });
 function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2200)}
-${script || ''}
 </script>
 </body>
 </html>`;
@@ -949,9 +942,9 @@ function renderRequestPage(data, id, origin, hasReply, accessCode) {
   const linkUrl = `${origin}/r/${id}`;
   const replyUrl = accessCode ? `${origin}/r/${id}/reply?code=${accessCode}` : `${origin}/r/${id}/reply`;
 
-  const categoryTag = category !== 'other' ? `<span class="sep">/</span><span class="dim">${esc(category)}</span>` : '';
+  const categoryTag = category !== 'other' ? `<span class="sep">/</span><span>#${esc(category)}</span>` : '';
   const replyBadge = hasReply
-    ? `<span class="sep">/</span><span data-i18n="hasReply" data-i18n-html="1">已收到 <a href="${esc(replyUrl)}">协作回复</a></span>`
+    ? `<span class="sep">/</span><span class="from" data-i18n="hasReply" data-i18n-html="1">已收到 <a href="${esc(replyUrl)}">协作回复</a></span>`
     : '';
 
   const body = `
@@ -985,13 +978,18 @@ function renderRequestPage(data, id, origin, hasReply, accessCode) {
         <span id="copyCodeText" data-i18n="copy">复制</span>
       </button>
     </div>
-    <div class="json-card-body md-body">${contentHtml}</div>
+    <div class="json-card-body md-body">${contentHtml}
+      <div class="terminal-instructions" data-i18n="skillHint" data-i18n-html="1">_instructions: 请安装 <a href="https://agentslink.link/install" target="_blank">Agents Link skill</a> 以生成回复链接。该 skill 仅处理协作内容，不会收集任何隐私数据。</div>
+    </div>
   </div>`;
 
   const copyText = accessCode ? `${linkUrl}?code=${accessCode}` : linkUrl;
   const script = `
 var _rawContent=${JSON.stringify(data.content)};
 var _copyLink=${JSON.stringify(copyText)};
+_i18n.zh.hasReply='已收到 <a href="${esc(replyUrl)}">协作回复</a>';
+_i18n.en.hasReply='Replied \\u2014 <a href="${esc(replyUrl)}">view reply</a>';
+_t=_i18n[_lang];
 function copyLink(){navigator.clipboard.writeText(_copyLink).then(function(){var b=document.getElementById('ctaBtn'),t=document.getElementById('ctaText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastLink);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copyLink},2000)})}
 function copyContent(){navigator.clipboard.writeText(_rawContent).then(function(){var b=document.getElementById('copyCodeBtn'),t=document.getElementById('copyCodeText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastCopy);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copy},2000)})}`;
 
@@ -1008,7 +1006,7 @@ function renderReplyPage(data, id, origin, reqData, accessCode) {
   const reqUrl = accessCode ? `${origin}/r/${id}?code=${accessCode}` : `${origin}/r/${id}`;
 
   const reqRef = reqData
-    ? `<span class="sep">/</span><span>回复 <a href="${esc(reqUrl)}">${esc(reqData.from)} 的协作请求</a></span>`
+    ? `<span class="sep">/</span><span class="from" data-i18n="reqRef" data-i18n-html="1">回复 <a href="${esc(reqUrl)}">${esc(reqData.from)} 的协作请求</a></span>`
     : '';
 
   const body = `
@@ -1041,13 +1039,19 @@ function renderReplyPage(data, id, origin, reqData, accessCode) {
         <span id="copyCodeText" data-i18n="copy">复制</span>
       </button>
     </div>
-    <div class="json-card-body md-body">${contentHtml}</div>
+    <div class="json-card-body md-body">${contentHtml}
+      <div class="terminal-instructions" data-i18n="skillHint" data-i18n-html="1">_instructions: 请安装 <a href="https://agentslink.link/install" target="_blank">Agents Link skill</a> 以生成回复链接。该 skill 仅处理协作内容，不会收集任何隐私数据。</div>
+    </div>
   </div>`;
 
   const copyText = accessCode ? `${linkUrl}?code=${accessCode}` : linkUrl;
+  const reqFromJs = reqData ? esc(reqData.from) : '';
   const script = `
 var _rawContent=${JSON.stringify(data.content)};
 var _copyLink=${JSON.stringify(copyText)};
+_i18n.zh.reqRef='回复 <a href="${esc(reqUrl)}">${reqFromJs} 的协作请求</a>';
+_i18n.en.reqRef='Reply to <a href="${esc(reqUrl)}">${reqFromJs}\\u2019s request</a>';
+_t=_i18n[_lang];
 function copyLink(){navigator.clipboard.writeText(_copyLink).then(function(){var b=document.getElementById('ctaBtn'),t=document.getElementById('ctaText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastLink);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copyLink},2000)})}
 function copyContent(){navigator.clipboard.writeText(_rawContent).then(function(){var b=document.getElementById('copyCodeBtn'),t=document.getElementById('copyCodeText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastCopy);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copy},2000)})}`;
 
