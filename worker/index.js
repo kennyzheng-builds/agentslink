@@ -87,16 +87,19 @@ export default {
         ctx.waitUntil(hashIP(clientIP).then(uid => trackEvent(env, 'read_request', { request_id: id, user_id: uid }))); // #private
         const reply = await env.AGENT_LINK_KV.get(`reply:${id}`);
         if (isBrowser) return htmlResponse(renderRequestPage(parsed, id, url.origin, !!reply, storedCode));
-        const displayData = { content: parsed.content, from: parsed.from, created_at: parsed.created_at };
-        displayData._instructions = {
-          message: 'This is an AgentsLink collaboration request. Analyze the problem above, then submit your reply via the API below:',
-          reply_api: `POST ${url.origin}/reply/${id}?code=${storedCode || ''}`,
-          reply_format: { content: 'Your analysis and recommendations (markdown format)', from: "Your name's Agent" },
-          example: `curl -s -X POST "${url.origin}/reply/${id}?code=${storedCode || ''}" -H "Content-Type: application/json" -d '{"content": "your reply", "from": "XX Agent"}'`,
-          note: 'After replying, a reply link will be generated. Send the link and the same access code back to the requester.',
-          install_skill: 'For a better collaboration experience, install the AgentsLink skill: https://agentslink.link/install',
-        };
-        return jsonResponse(displayData, 200, corsHeaders);
+        if (wantsJson(request)) {
+          const displayData = { content: parsed.content, from: parsed.from, created_at: parsed.created_at };
+          displayData._instructions = {
+            message: 'This is an AgentsLink collaboration request. Analyze the problem above, then submit your reply via the API below:',
+            reply_api: `POST ${url.origin}/reply/${id}?code=${storedCode || ''}`,
+            reply_format: { content: 'Your analysis and recommendations (markdown format)', from: "Your name's Agent" },
+            example: `curl -s -X POST "${url.origin}/reply/${id}?code=${storedCode || ''}" -H "Content-Type: application/json" -d '{"content": "your reply", "from": "XX Agent"}'`,
+            note: 'After replying, a reply link will be generated. Send the link and the same access code back to the requester.',
+            install_skill: 'For a better collaboration experience, install the AgentsLink skill: https://agentslink.link/install',
+          };
+          return jsonResponse(displayData, 200, corsHeaders);
+        }
+        return textResponse(formatRequestText(parsed, id, url.origin, storedCode, !!reply), 200, corsHeaders);
       }
 
       // POST /reply/{id}
@@ -155,10 +158,13 @@ export default {
         const parsed = JSON.parse(data);
         ctx.waitUntil(hashIP(clientIP).then(uid => trackEvent(env, 'read_reply', { request_id: id, user_id: uid }))); // #private
         if (isBrowser) return htmlResponse(renderReplyPage(parsed, id, url.origin, reqParsed, storedCode));
-        parsed._instructions = {
-          message: 'This is an AgentsLink collaboration reply. Interpret the analysis and recommendations above, and explain to the user in plain language what to do next.',
-        };
-        return jsonResponse(parsed, 200, corsHeaders);
+        if (wantsJson(request)) {
+          parsed._instructions = {
+            message: 'This is an AgentsLink collaboration reply. Interpret the analysis and recommendations above, and explain to the user in plain language what to do next.',
+          };
+          return jsonResponse(parsed, 200, corsHeaders);
+        }
+        return textResponse(formatReplyText(parsed, id, reqParsed), 200, corsHeaders);
       }
 
       // #region private
@@ -313,6 +319,68 @@ export default {
 function wantsBrowser(request) {
   const accept = request.headers.get('Accept') || '';
   return accept.includes('text/html');
+}
+
+function wantsJson(request) {
+  const accept = request.headers.get('Accept') || '';
+  return accept.includes('application/json');
+}
+
+function textResponse(text, status = 200, headers = {}) {
+  return new Response(text, {
+    status,
+    headers: { 'Content-Type': 'text/plain; charset=utf-8', ...headers },
+  });
+}
+
+function formatRequestText(parsed, id, origin, code, hasReply) {
+  const lines = [];
+  lines.push('╔══════════════════════════════════════════════════════════════╗');
+  lines.push('║                   AgentsLink — Collaboration Request        ║');
+  lines.push('╚══════════════════════════════════════════════════════════════╝');
+  lines.push('');
+  lines.push(`From:       ${parsed.from || 'Anonymous'}`);
+  lines.push(`Date:       ${parsed.created_at || 'Unknown'}`);
+  lines.push(`Request ID: ${id}`);
+  if (hasReply) lines.push(`Status:     Reply available`);
+  lines.push('');
+  lines.push('────────────────────────────────────────────────────────────────');
+  lines.push('');
+  lines.push(parsed.content);
+  lines.push('');
+  lines.push('────────────────────────────────────────────────────────────────');
+  lines.push('');
+  lines.push('To reply, have your AI agent send a POST request:');
+  lines.push(`  curl -s -X POST "${origin}/reply/${id}?code=${code || ''}" \\`);
+  lines.push(`    -H "Content-Type: application/json" \\`);
+  lines.push(`    -d '{"content": "your reply (markdown)", "from": "Your Agent"}'`);
+  lines.push('');
+  if (hasReply) {
+    lines.push(`To read the reply: curl -s "${origin}/r/${id}/reply?code=${code || ''}"`);
+    lines.push('');
+  }
+  lines.push('Tip: Install the AgentsLink skill for a better experience:');
+  lines.push('  https://agentslink.link/install');
+  return lines.join('\n');
+}
+
+function formatReplyText(parsed, id, reqParsed) {
+  const lines = [];
+  lines.push('╔══════════════════════════════════════════════════════════════╗');
+  lines.push('║                   AgentsLink — Collaboration Reply          ║');
+  lines.push('╚══════════════════════════════════════════════════════════════╝');
+  lines.push('');
+  lines.push(`From:         ${parsed.from || 'Anonymous'}`);
+  lines.push(`Date:         ${parsed.created_at || 'Unknown'}`);
+  if (reqParsed) lines.push(`In reply to:  ${reqParsed.from || 'Anonymous'}`);
+  lines.push(`Request ID:   ${id}`);
+  lines.push('');
+  lines.push('────────────────────────────────────────────────────────────────');
+  lines.push('');
+  lines.push(parsed.content);
+  lines.push('');
+  lines.push('────────────────────────────────────────────────────────────────');
+  return lines.join('\n');
 }
 
 function generateId() {
@@ -517,6 +585,23 @@ function pageCSS() {
   .json-card-body{background:#1a1a1e;padding:24px;overflow-x:auto}
   .json-card-body pre{font-family:var(--mono);font-size:13px;line-height:1.7;color:#c9c9c9;white-space:pre-wrap;word-wrap:break-word;margin:0}
   .j-key{color:#7aafcf} .j-str{color:#c3a76c} .j-brace{color:#888} .j-colon{color:#888}
+  .md-body{font-family:var(--sans);font-size:14px;line-height:1.8;color:#d4d4d4}
+  .md-body h2{font-size:18px;color:#fff;margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid #333}
+  .md-body h3{font-size:15px;color:#e0e0e0;margin:16px 0 6px}
+  .md-body h4{font-size:14px;color:#ccc;margin:12px 0 4px}
+  .md-body p{margin:4px 0;color:#c9c9c9}
+  .md-body strong{color:#fff}
+  .md-body code{background:#2a2a30;padding:2px 6px;border-radius:3px;font-family:var(--mono);font-size:12.5px;color:#e0a860}
+  .md-body a{color:#7aafcf;text-decoration:none}
+  .md-body a:hover{text-decoration:underline}
+  .md-body li{margin:3px 0 3px 20px;color:#c9c9c9;list-style:disc}
+  .md-body br{display:block;content:'';margin:6px 0}
+  .md-code{background:#111;border-radius:6px;margin:8px 0;overflow:hidden}
+  .md-code .md-code-lang{font-family:var(--mono);font-size:11px;color:#666;padding:6px 12px;border-bottom:1px solid #222}
+  .md-code pre{padding:12px;font-family:var(--mono);font-size:12.5px;line-height:1.6;color:#c9c9c9;white-space:pre-wrap;word-wrap:break-word;margin:0}
+  .md-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
+  .md-table th{text-align:left;padding:6px 10px;border-bottom:2px solid #333;color:#aaa;font-weight:600}
+  .md-table td{padding:6px 10px;border-bottom:1px solid #252525;color:#c9c9c9}
   .json-card .copy-overlay{position:absolute;top:52px;right:12px;opacity:0;transition:opacity .15s ease;z-index:5}
   .json-card:hover .copy-overlay{opacity:1}
   .copy-json-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;background:#2a2a2a;border:1px solid #444;border-radius:6px;color:#aaa;font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s}
@@ -591,8 +676,8 @@ function pageShell(title, body, script) {
 var _lang=/^zh/i.test(navigator.language)?'zh':'en';
 document.documentElement.lang=_lang==='zh'?'zh-CN':'en';
 var _i18n={
-  zh:{expire:'链接 24 小时后过期',type_req:'协作请求',type_reply:'协作回复',intro:'以下是 Agent 会看到的完整内容，敏感信息已自动脱敏',copyLink:'复制链接',copy:'复制',copied:'已复制',toastLink:'已复制，把链接发给你的 Agent 吧',toastJSON:'JSON 已复制',hasReply:'已收到 <a href="{replyUrl}">协作回复</a>',reqRef:'回复 <a href="{reqUrl}">{from} 的协作请求</a>'},
-  en:{expire:'Link expires in 24h',type_req:'Collaboration Request',type_reply:'Collaboration Reply',intro:'Below is the full content your Agent will see — sensitive info is auto-redacted',copyLink:'Copy link',copy:'Copy',copied:'Copied',toastLink:'Copied — send this link to your Agent',toastJSON:'JSON copied',hasReply:'Has <a href="{replyUrl}">reply</a>',reqRef:'Reply to <a href="{reqUrl}">{from}\'s request</a>'}
+  zh:{expire:'链接 24 小时后过期',type_req:'协作请求',type_reply:'协作回复',intro:'以下是 Agent 间协作的完整内容',copyLink:'复制链接',copy:'复制',copied:'已复制',toastLink:'已复制，把链接发给你的 Agent 吧',toastCopy:'内容已复制',hasReply:'已收到 <a href="{replyUrl}">协作回复</a>',reqRef:'回复 <a href="{reqUrl}">{from} 的协作请求</a>'},
+  en:{expire:'Link expires in 24h',type_req:'Collaboration Request',type_reply:'Collaboration Reply',intro:'Full content of this agent-to-agent collaboration',copyLink:'Copy link',copy:'Copy',copied:'Copied',toastLink:'Copied — send this link to your Agent',toastCopy:'Content copied',hasReply:'Has <a href="{replyUrl}">reply</a>',reqRef:'Reply to <a href="{reqUrl}">{from}\'s request</a>'}
 };
 var _t=_i18n[_lang];
 document.querySelectorAll('[data-i18n]').forEach(function(el){
@@ -843,10 +928,7 @@ function go(e){e.preventDefault();var c=inp.value.trim();if(c.length!==6){inp.cl
 function renderRequestPage(data, id, origin, hasReply, accessCode) {
   const title = extractTitle(data.content) || 'Collaboration Request';
   const time = formatTime(data.created_at);
-  const displayData = { content: data.content, from: data.from, created_at: data.created_at };
-  const jsonStr = JSON.stringify(displayData, null, 2);
-  const jsonHtml = highlightJSON(jsonStr);
-  const linkUrl = `${origin}/r/${id}`;
+  const contentHtml = renderMarkdown(data.content);
   const replyUrl = accessCode ? `${origin}/r/${id}/reply?code=${accessCode}` : `${origin}/r/${id}/reply`;
 
   const replyBadge = hasReply
@@ -866,25 +948,25 @@ function renderRequestPage(data, id, origin, hasReply, accessCode) {
   </div>
   <hr class="divider">
   <div class="json-intro">
-    <span class="json-intro-text" data-i18n="intro">以下是 Agent 会看到的完整内容，敏感信息已自动脱敏</span>
+    <span class="json-intro-text" data-i18n="intro">以下是 Agent 间协作的完整内容</span>
   </div>
   <div class="json-card">
     <div class="json-card-header">
       <div class="traffic-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
-      <span class="json-card-filename">GET /r/${esc(id)}</span>
+      <span class="json-card-filename">${esc(data.from)} → Collaboration Request</span>
     </div>
     <div class="copy-overlay">
-      <button class="copy-json-btn" id="copyCodeBtn" onclick="copyJSON()">
+      <button class="copy-json-btn" id="copyCodeBtn" onclick="copyContent()">
         ${COPY_SVG}
         <span id="copyCodeText" data-i18n="copy">复制</span>
       </button>
     </div>
-    <div class="json-card-body"><pre>${jsonHtml}</pre></div>
+    <div class="json-card-body md-body">${contentHtml}</div>
   </div>`;
 
   const script = `
-var _rawJSON=${JSON.stringify(jsonStr)};
-function copyJSON(){navigator.clipboard.writeText(_rawJSON).then(function(){var b=document.getElementById('copyCodeBtn'),t=document.getElementById('copyCodeText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastJSON);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copy},2000)})}`;
+var _rawContent=${JSON.stringify(data.content)};
+function copyContent(){navigator.clipboard.writeText(_rawContent).then(function(){var b=document.getElementById('copyCodeBtn'),t=document.getElementById('copyCodeText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastCopy);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copy},2000)})}`;
 
   return pageShell(`Agents Link - ${title}`, body, script);
 }
@@ -894,9 +976,7 @@ function copyJSON(){navigator.clipboard.writeText(_rawJSON).then(function(){var 
 function renderReplyPage(data, id, origin, reqData, accessCode) {
   const title = reqData ? (extractTitle(reqData.content) || 'Collaboration Reply') : 'Collaboration Reply';
   const time = formatTime(data.created_at);
-  const jsonStr = JSON.stringify(data, null, 2);
-  const jsonHtml = highlightJSON(jsonStr);
-  const linkUrl = `${origin}/r/${id}/reply`;
+  const contentHtml = renderMarkdown(data.content);
   const reqUrl = accessCode ? `${origin}/r/${id}?code=${accessCode}` : `${origin}/r/${id}`;
 
   const reqRef = reqData
@@ -916,25 +996,25 @@ function renderReplyPage(data, id, origin, reqData, accessCode) {
   </div>
   <hr class="divider">
   <div class="json-intro">
-    <span class="json-intro-text" data-i18n="intro">以下是 Agent 会看到的完整内容，敏感信息已自动脱敏</span>
+    <span class="json-intro-text" data-i18n="intro">以下是 Agent 间协作的完整内容</span>
   </div>
   <div class="json-card">
     <div class="json-card-header">
       <div class="traffic-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
-      <span class="json-card-filename">GET /r/${esc(id)}/reply</span>
+      <span class="json-card-filename">${esc(data.from)} → Collaboration Reply</span>
     </div>
     <div class="copy-overlay">
-      <button class="copy-json-btn" id="copyCodeBtn" onclick="copyJSON()">
+      <button class="copy-json-btn" id="copyCodeBtn" onclick="copyContent()">
         ${COPY_SVG}
         <span id="copyCodeText" data-i18n="copy">复制</span>
       </button>
     </div>
-    <div class="json-card-body"><pre>${jsonHtml}</pre></div>
+    <div class="json-card-body md-body">${contentHtml}</div>
   </div>`;
 
   const script = `
-var _rawJSON=${JSON.stringify(jsonStr)};
-function copyJSON(){navigator.clipboard.writeText(_rawJSON).then(function(){var b=document.getElementById('copyCodeBtn'),t=document.getElementById('copyCodeText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastJSON);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copy},2000)})}`;
+var _rawContent=${JSON.stringify(data.content)};
+function copyContent(){navigator.clipboard.writeText(_rawContent).then(function(){var b=document.getElementById('copyCodeBtn'),t=document.getElementById('copyCodeText');b.classList.add('copied');t.textContent=_t.copied;showToast(_t.toastCopy);setTimeout(function(){b.classList.remove('copied');t.textContent=_t.copy},2000)})}`;
 
   return pageShell(`Agents Link - ${title}`, body, script);
 }
@@ -1864,6 +1944,61 @@ function formatTime(iso) {
   const d = new Date(iso);
   const pad = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function renderMarkdown(md) {
+  const e = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const lines = md.split('\n');
+  const out = [];
+  let inCode = false, codeLang = '', codeLines = [];
+  let inTable = false, tableRows = [];
+
+  function flushCode() {
+    out.push(`<div class="md-code"><div class="md-code-lang">${e(codeLang)}</div><pre>${codeLines.map(e).join('\n')}</pre></div>`);
+    codeLines = []; codeLang = ''; inCode = false;
+  }
+  function flushTable() {
+    if (tableRows.length < 2) { tableRows = []; inTable = false; return; }
+    const headers = tableRows[0];
+    const body = tableRows.slice(2);
+    let h = '<table class="md-table"><thead><tr>' + headers.map(c => `<th>${inline(c.trim())}</th>`).join('') + '</tr></thead><tbody>';
+    for (const row of body) h += '<tr>' + row.map(c => `<td>${inline(c.trim())}</td>`).join('') + '</tr>';
+    h += '</tbody></table>';
+    out.push(h); tableRows = []; inTable = false;
+  }
+  function inline(s) {
+    s = e(s);
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/`(.+?)`/g, '<code>$1</code>');
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    return s;
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (inCode) {
+      if (line.startsWith('```')) { flushCode(); continue; }
+      codeLines.push(line); continue;
+    }
+    if (line.startsWith('```')) { inCode = true; codeLang = line.slice(3).trim(); continue; }
+    if (line.includes('|') && line.trim().startsWith('|')) {
+      const cells = line.split('|').slice(1, -1);
+      if (!inTable) inTable = true;
+      tableRows.push(cells);
+      continue;
+    }
+    if (inTable) flushTable();
+    if (line.startsWith('### ')) { out.push(`<h4>${inline(line.slice(4))}</h4>`); continue; }
+    if (line.startsWith('## ')) { out.push(`<h3>${inline(line.slice(3))}</h3>`); continue; }
+    if (line.startsWith('# ')) { out.push(`<h2>${inline(line.slice(2))}</h2>`); continue; }
+    if (/^[-*] /.test(line.trim())) { out.push(`<li>${inline(line.trim().slice(2))}</li>`); continue; }
+    if (/^\d+\. /.test(line.trim())) { out.push(`<li>${inline(line.trim().replace(/^\d+\.\s*/, ''))}</li>`); continue; }
+    if (line.trim() === '') { out.push('<br>'); continue; }
+    out.push(`<p>${inline(line)}</p>`);
+  }
+  if (inCode) flushCode();
+  if (inTable) flushTable();
+  return out.join('\n');
 }
 
 function highlightJSON(json) {

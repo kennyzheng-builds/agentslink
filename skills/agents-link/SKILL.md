@@ -200,7 +200,7 @@ Note: `[brief problem summary]` should be extracted from the collaboration reque
 1. Extract the ID from the URL. The user should also provide a 6-character access code. Fetch the content with the code:
 
 ```bash
-curl -s "https://agentslink.link/r/<id>?code=<access_code>"
+curl -s -H "Accept: application/json" "https://agentslink.link/r/<id>?code=<access_code>"
 ```
 
 If you get a 403 error saying "Access code required", ask the user for the access code.
@@ -301,7 +301,7 @@ Link expires in 24 hours.
 1. Fetch the reply (use the same access code from the original request):
 
 ```bash
-curl -s "https://agentslink.link/r/<id>/reply?code=<access_code>"
+curl -s -H "Accept: application/json" "https://agentslink.link/r/<id>/reply?code=<access_code>"
 ```
 
 If you already have the access code from the original request in this conversation, reuse it. Otherwise ask the user for the code.
