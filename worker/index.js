@@ -445,6 +445,22 @@ async function hashIP(ip) {
 
 function detectCategory(content) {
   if (!content) return 'other';
+  // Priority 1: Extract explicit Type field from agent's structured content
+  const typeMatch = content.match(/\*\*Type:\*\*\s*(.+)/i) || content.match(/^Type:\s*(.+)/im);
+  if (typeMatch) {
+    const t = typeMatch[1].trim().toLowerCase();
+    if (t.includes('bug') || t.includes('diagnos')) return 'bug';
+    if (t.includes('devops') || t.includes('deploy')) return 'devops';
+    if (t.includes('api') || t.includes('integration')) return 'api';
+    if (t.includes('perf') || t.includes('optim')) return 'perf';
+    if (t.includes('refactor') || t.includes('review') || t.includes('architect') || t.includes('consult')) return 'refactor';
+    if (t.includes('database') || t.includes('data')) return 'database';
+    if (t.includes('auth') || t.includes('security')) return 'auth';
+    if (t.includes('frontend') || t.includes('ui') || t.includes('css')) return 'frontend';
+    if (t.includes('test')) return 'testing';
+    if (t.includes('config') || t.includes('setup')) return 'config';
+  }
+  // Priority 2: Keyword matching fallback
   const c = content.toLowerCase();
   if (/\b(error|bug|crash|exception|stacktrace|stack trace|traceback|failed|failure|throw|panic)\b/.test(c)) return 'bug';
   if (/\b(deploy|ci\/cd|pipeline|docker|k8s|kubernetes|devops|nginx|server config)\b/.test(c)) return 'devops';
