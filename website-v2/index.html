@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentsLink — 让 Agent 帮你传话，不丢信息</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-cream: #FDFBF7;
+            --bg-warm: #F7F3ED;
+            --bg-sand: #EDE6DC;
+            --ink-primary: #1C1917;
+            --ink-secondary: #4A4540;
+            --ink-muted: #78726A;
+            --ink-subtle: #A8A099;
+            --terracotta: #B85C3F;
+            --terracotta-dark: #9A4A32;
+            --terracotta-light: #D4826A;
+            --sage: #6B7B6A;
+            --sage-light: #8A9A89;
+            --ochre: #C9A66B;
+            --border-subtle: #E5DDD3;
+            --border-light: #F0EBE4;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-cream);
+            color: var(--ink-primary);
+            line-height: 1.6;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Crimson Pro', Georgia, serif;
+            font-weight: 400;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+        h1 { font-size: clamp(3rem, 6vw, 5rem); }
+        h2 { font-size: clamp(2rem, 4vw, 3rem); }
+        h3 { font-size: clamp(1.25rem, 2vw, 1.5rem); font-weight: 500; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+
+        /* Nav */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: rgba(253, 251, 247, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 100;
+            transition: all 0.4s var(--ease-out-quart);
+        }
+        nav.scrolled {
+            background: rgba(253, 251, 247, 0.95);
+            box-shadow: 0 1px 0 var(--border-subtle);
+        }
+        nav .container {
+            display: flex; justify-content: space-between; align-items: center; height: 72px;
+        }
+        .logo {
+            font-family: 'Crimson Pro', serif; font-size: 1.5rem; font-weight: 600;
+            color: var(--ink-primary); text-decoration: none;
+            display: flex; align-items: center; gap: 10px; transition: opacity 0.3s;
+        }
+        .logo:hover { opacity: 0.7; }
+        .logo-mark { width: 28px; height: 28px; position: relative; }
+        .logo-mark::before, .logo-mark::after {
+            content: ''; position: absolute; border-radius: 50%;
+            transition: transform 0.4s var(--ease-out-expo);
+        }
+        .logo-mark::before {
+            width: 14px; height: 14px; background: var(--terracotta);
+            left: 0; top: 50%; transform: translateY(-50%);
+        }
+        .logo-mark::after {
+            width: 10px; height: 10px; background: var(--sage);
+            right: 0; top: 50%; transform: translateY(-50%);
+        }
+        .logo:hover .logo-mark::before { transform: translateY(-50%) translateX(4px); }
+        .logo:hover .logo-mark::after { transform: translateY(-50%) translateX(-4px); }
+        .nav-links { display: flex; gap: 40px; list-style: none; }
+        .nav-links a {
+            color: var(--ink-secondary); text-decoration: none; font-size: 0.9rem;
+            font-weight: 500; position: relative; padding: 4px 0; transition: color 0.3s;
+        }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 1px;
+            background: var(--terracotta); transition: width 0.3s var(--ease-out-expo);
+        }
+        .nav-links a:hover { color: var(--terracotta); }
+        .nav-links a:hover::after { width: 100%; }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh; display: flex; align-items: center;
+            padding-top: 72px; position: relative; overflow: hidden;
+        }
+        .hero-bg { position: absolute; inset: 0; pointer-events: none; }
+        .hero-bg-circle { position: absolute; border-radius: 50%; opacity: 0.4; }
+        .hero-bg-circle-1 {
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, var(--ochre) 0%, transparent 70%);
+            top: -20%; right: -20%; opacity: 0.15;
+            animation: float 20s ease-in-out infinite;
+        }
+        .hero-bg-circle-2 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, var(--sage) 0%, transparent 70%);
+            bottom: -10%; left: -10%; opacity: 0.1;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, -30px); }
+        }
+        .hero-content {
+            max-width: 680px; position: relative; z-index: 1;
+        }
+        .hero-eyebrow {
+            font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.15em; color: var(--terracotta); margin-bottom: 24px;
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.8s var(--ease-out-expo) 0.2s forwards;
+        }
+        .hero h1 {
+            margin-bottom: 28px; color: var(--ink-primary);
+            opacity: 0; transform: translateY(30px);
+            animation: fadeUp 0.8s var(--ease-out-expo) 0.4s forwards;
+        }
+        .hero h1 em {
+            font-style: italic; color: var(--terracotta); position: relative;
+        }
+        .hero h1 em::after {
+            content: ''; position: absolute; bottom: 0.1em; left: -0.1em; right: -0.1em;
+            height: 0.15em; background: var(--ochre); opacity: 0.3; z-index: -1;
+        }
+        .hero-description {
+            font-size: 1.25rem; color: var(--ink-secondary); margin-bottom: 48px;
+            max-width: 560px; line-height: 1.7;
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.8s var(--ease-out-expo) 0.6s forwards;
+        }
+        .hero-actions {
+            display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 56px;
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.8s var(--ease-out-expo) 0.8s forwards;
+        }
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        .hero-meta {
+            display: flex; align-items: center; gap: 32px;
+            font-size: 0.85rem; color: var(--ink-muted);
+            opacity: 0; animation: fadeIn 0.8s var(--ease-out-expo) 1s forwards;
+        }
+        .hero-meta span { display: flex; align-items: center; gap: 8px; }
+        .hero-meta-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sage); }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 16px 32px; border-radius: 4px; font-size: 0.95rem; font-weight: 600;
+            text-decoration: none; transition: all 0.3s var(--ease-out-quart);
+            cursor: pointer; border: none; position: relative; overflow: hidden;
+        }
+        .btn-primary { background: var(--terracotta); color: white; }
+        .btn-primary::before {
+            content: ''; position: absolute; inset: 0; background: var(--terracotta-dark);
+            transform: translateY(100%); transition: transform 0.4s var(--ease-out-expo);
+        }
+        .btn-primary:hover::before { transform: translateY(0); }
+        .btn-primary span { position: relative; z-index: 1; }
+        .btn-primary:hover {
+            transform: translateY(-2px); box-shadow: 0 8px 24px rgba(184, 92, 63, 0.25);
+        }
+        .btn-secondary {
+            background: transparent; color: var(--ink-primary);
+            border: 1px solid var(--border-subtle);
+        }
+        .btn-secondary:hover { background: var(--bg-warm); border-color: var(--ink-subtle); }
+
+        /* Hero Visual */
+        .hero-visual {
+            position: absolute; right: 6%; top: 50%; transform: translateY(-50%);
+            width: 440px; height: 360px;
+            opacity: 0; animation: fadeIn 1s var(--ease-out-expo) 1s forwards;
+        }
+        .package-scene { position: relative; width: 100%; height: 100%; }
+        .agent-card {
+            position: absolute; background: white; border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            padding: 20px; font-size: 0.8rem; width: 160px;
+            transition: transform 0.6s var(--ease-out-expo);
+        }
+        .agent-card:hover { transform: scale(1.03); }
+        .agent-card.sender { left: 0; top: 20%; }
+        .agent-card.receiver { right: 0; top: 20%; }
+        .agent-card-label {
+            font-weight: 600; font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 0.08em; margin-bottom: 8px;
+        }
+        .agent-card.sender .agent-card-label { color: var(--terracotta); }
+        .agent-card.receiver .agent-card-label { color: var(--sage); }
+        .agent-card-text { color: var(--ink-muted); font-size: 0.75rem; line-height: 1.5; }
+
+        .package-arrow {
+            position: absolute; left: 38%; right: 38%; top: 42%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .package-icon {
+            width: 48px; height: 48px; background: var(--bg-warm);
+            border: 2px solid var(--border-subtle); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem; animation: bobFloat 3s ease-in-out infinite;
+        }
+        @keyframes bobFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .arrow-line {
+            position: absolute; top: 50%; height: 2px; background: var(--border-subtle);
+        }
+        .arrow-line.left { left: 0; right: 52%; }
+        .arrow-line.right { left: 52%; right: 0; }
+
+        .human-badge {
+            position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%);
+            background: var(--bg-warm); border: 1px solid var(--border-subtle);
+            border-radius: 20px; padding: 6px 16px; font-size: 0.7rem;
+            color: var(--ink-muted); white-space: nowrap;
+        }
+
+        /* Section shared */
+        .section-eyebrow {
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.15em; color: var(--terracotta); margin-bottom: 16px;
+        }
+
+        /* Comparison */
+        .comparison {
+            padding: 140px 0; background: var(--bg-warm); position: relative;
+        }
+        .comparison::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+        }
+        .comparison-header { text-align: center; margin-bottom: 80px; }
+        .comparison-header .section-eyebrow { color: var(--sage); }
+        .comparison-header h2 { margin-bottom: 16px; }
+        .comparison-header > p { color: var(--ink-secondary); font-size: 1.125rem; }
+        .comparison-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+            max-width: 960px; margin: 0 auto;
+        }
+        .comparison-card {
+            border-radius: 12px; padding: 48px; position: relative; overflow: hidden;
+        }
+        .comparison-card.before {
+            background: var(--bg-cream); border: 1px solid var(--border-subtle);
+        }
+        .comparison-card.after { background: var(--ink-primary); color: var(--bg-cream); }
+        .comparison-card h3 {
+            margin-bottom: 32px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+            text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;
+        }
+        .comparison-card.before h3 { color: var(--ink-muted); }
+        .comparison-card.after h3 { color: var(--ochre); }
+        .chat-flow { display: flex; flex-direction: column; gap: 12px; }
+        .chat-bubble {
+            padding: 14px 18px; border-radius: 16px; font-size: 0.9rem;
+            max-width: 90%; line-height: 1.5;
+        }
+        .chat-bubble.you {
+            background: white; color: var(--ink-primary); margin-left: auto;
+            border-bottom-right-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .chat-bubble.friend {
+            background: var(--bg-sand); color: var(--ink-primary); border-bottom-left-radius: 4px;
+        }
+        .comparison-card.after .chat-bubble.you {
+            background: rgba(184, 92, 63, 0.2); color: var(--bg-cream); box-shadow: none;
+        }
+        .comparison-card.after .chat-bubble.agent {
+            background: rgba(107, 123, 106, 0.3); color: var(--bg-cream); border-bottom-left-radius: 4px;
+        }
+        .chat-bubble strong { font-weight: 600; opacity: 0.7; }
+        .info-lost {
+            font-size: 0.75rem; color: var(--ink-muted); text-align: center;
+            margin-top: 20px; font-style: italic;
+        }
+
+        /* How It Works */
+        .how-it-works { padding: 140px 0; background: var(--bg-cream); }
+        .how-it-works-header { text-align: center; margin-bottom: 80px; }
+        .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; }
+        .step {
+            position: relative; padding: 48px 40px;
+            background: var(--bg-warm); border-radius: 8px;
+            transition: transform 0.4s var(--ease-out-expo), box-shadow 0.4s;
+        }
+        .step:hover {
+            transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+        }
+        .step-number {
+            font-family: 'Crimson Pro', serif; font-size: 4rem; font-weight: 400;
+            color: var(--border-subtle); line-height: 1; margin-bottom: 24px;
+            transition: color 0.4s;
+        }
+        .step:hover .step-number { color: var(--terracotta-light); }
+        .step h3 { margin-bottom: 12px; color: var(--ink-primary); font-size: 1.25rem; }
+        .step p { color: var(--ink-secondary); line-height: 1.7; font-size: 0.95rem; margin-bottom: 20px; }
+        .step-command {
+            background: var(--bg-cream); padding: 12px 16px; border-radius: 4px;
+            font-family: 'SF Mono', Monaco, monospace; font-size: 0.8rem;
+            color: var(--terracotta); display: inline-block; border: 1px solid var(--border-subtle);
+        }
+
+        /* Features */
+        .features {
+            padding: 140px 0; background: var(--bg-warm); position: relative;
+        }
+        .features::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+        }
+        .features-header { text-align: center; margin-bottom: 80px; }
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+        .feature {
+            text-align: center; padding: 48px 32px;
+            background: var(--bg-cream); border-radius: 8px;
+            transition: transform 0.4s var(--ease-out-expo);
+        }
+        .feature:hover { transform: translateY(-4px); }
+        .feature-icon {
+            width: 64px; height: 64px; margin: 0 auto 24px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--bg-warm); border-radius: 50%; font-size: 1.75rem;
+            transition: transform 0.4s var(--ease-out-expo), background 0.4s;
+        }
+        .feature:hover .feature-icon { transform: scale(1.1); background: var(--border-subtle); }
+        .feature h3 {
+            margin-bottom: 12px; font-family: 'DM Sans', sans-serif;
+            font-size: 1.125rem; font-weight: 600; color: var(--ink-primary);
+        }
+        .feature p { color: var(--ink-secondary); font-size: 0.95rem; line-height: 1.6; }
+
+        /* Install Section */
+        .install {
+            padding: 140px 0; background: var(--bg-cream); position: relative;
+        }
+        .install::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+        }
+        .install-header { text-align: center; margin-bottom: 64px; }
+        .install-header h2 { margin-bottom: 16px; }
+        .install-header p { color: var(--ink-secondary); font-size: 1.125rem; max-width: 520px; margin: 0 auto; }
+
+        .install-box {
+            max-width: 720px; margin: 0 auto; background: var(--ink-primary);
+            border-radius: 12px; overflow: hidden;
+        }
+        .install-box-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .install-box-title {
+            font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+            color: var(--ink-subtle); text-transform: uppercase; letter-spacing: 0.08em;
+        }
+        .install-copy-btn {
+            background: var(--terracotta); color: white; border: none;
+            padding: 8px 20px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s var(--ease-out-quart);
+            font-family: 'DM Sans', sans-serif;
+        }
+        .install-copy-btn:hover {
+            background: var(--terracotta-dark); transform: translateY(-1px);
+        }
+        .install-copy-btn.copied { background: var(--sage); }
+        .install-content {
+            padding: 24px; color: rgba(255,255,255,0.75); font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.8rem; line-height: 1.8; white-space: pre-wrap; word-break: break-all;
+            max-height: 320px; overflow-y: auto;
+        }
+        .install-content .highlight { color: var(--terracotta-light); }
+        .install-content .comment { color: rgba(255,255,255,0.35); }
+
+        .install-steps {
+            max-width: 720px; margin: 40px auto 0; display: grid;
+            grid-template-columns: repeat(3, 1fr); gap: 24px;
+        }
+        .install-step {
+            text-align: center; padding: 24px 16px;
+        }
+        .install-step-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--bg-warm); border: 1px solid var(--border-subtle);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 12px; font-family: 'Crimson Pro', serif;
+            font-size: 1rem; font-weight: 600; color: var(--terracotta);
+        }
+        .install-step p {
+            font-size: 0.85rem; color: var(--ink-secondary); line-height: 1.5;
+        }
+
+        /* Footer */
+        footer {
+            padding: 64px 0; background: var(--ink-primary); color: var(--ink-subtle);
+        }
+        footer .container {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .footer-left { display: flex; align-items: center; gap: 32px; }
+        .footer-logo {
+            font-family: 'Crimson Pro', serif; font-weight: 600; color: var(--bg-cream);
+            text-decoration: none; font-size: 1.25rem;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .footer-links { display: flex; gap: 28px; list-style: none; }
+        .footer-links a {
+            color: var(--ink-subtle); text-decoration: none; font-size: 0.875rem;
+            transition: color 0.3s;
+        }
+        .footer-links a:hover { color: var(--bg-cream); }
+        .footer-right { font-size: 0.875rem; color: var(--ink-muted); }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-visual { display: none; }
+            .steps { grid-template-columns: 1fr; gap: 24px; }
+            .features-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .container { padding: 0 20px; }
+            .nav-links { display: none; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .hero-actions { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+            footer .container { flex-direction: column; gap: 24px; text-align: center; }
+            .footer-left { flex-direction: column; gap: 16px; }
+            .step { padding: 32px 24px; }
+            .comparison-card { padding: 32px 24px; }
+            .install-steps { grid-template-columns: 1fr; gap: 8px; }
+            .hero-meta { flex-direction: column; gap: 12px; align-items: flex-start; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="nav">
+        <div class="container">
+            <a href="#" class="logo">
+                <span class="logo-mark"></span>
+                AgentsLink
+            </a>
+            <ul class="nav-links">
+                <li><a href="#how-it-works">使用流程</a></li>
+                <li><a href="#features">特性</a></li>
+                <li><a href="#install">安装</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-bg">
+            <div class="hero-bg-circle hero-bg-circle-1"></div>
+            <div class="hero-bg-circle hero-bg-circle-2"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <span class="hero-eyebrow">Agent 协作工具</span>
+                <h1>传话不丢<em>上下文</em></h1>
+                <p class="hero-description">
+                    你在两个 Agent 之间传话时，报错信息、代码片段、配置细节都在丢失。AgentsLink 让 Agent 自己打包和解读上下文，你只需要转发。
+                </p>
+                <div class="hero-actions">
+                    <a href="#install" class="btn btn-primary"><span>一键安装</span></a>
+                    <a href="#how-it-works" class="btn btn-secondary">了解原理</a>
+                </div>
+                <div class="hero-meta">
+                    <span><span class="hero-meta-dot"></span>零成本，纯 Skill</span>
+                    <span><span class="hero-meta-dot"></span>只读咨询，安全可控</span>
+                    <span><span class="hero-meta-dot"></span>信息零损耗</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="package-scene">
+                <div class="agent-card sender">
+                    <div class="agent-card-label">你的 Agent</div>
+                    <div class="agent-card-text">自动打包：报错信息、环境配置、已尝试方案...</div>
+                </div>
+                <div class="package-arrow">
+                    <div class="arrow-line left"></div>
+                    <div class="package-icon">&#128230;</div>
+                    <div class="arrow-line right"></div>
+                </div>
+                <div class="agent-card receiver">
+                    <div class="agent-card-label">朋友的 Agent</div>
+                    <div class="agent-card-text">完整读取上下文，精准分析并回复</div>
+                </div>
+                <div class="human-badge">&#128100; 你只负责转发</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison -->
+    <section class="comparison">
+        <div class="container">
+            <div class="comparison-header">
+                <span class="section-eyebrow">Before & After</span>
+                <h2>告别信息折损</h2>
+                <p>人工传话每一步都在丢细节，Agent 打包保留 100% 上下文</p>
+            </div>
+            <div class="comparison-grid">
+                <div class="comparison-card before">
+                    <h3>人工传话</h3>
+                    <div class="chat-flow">
+                        <div class="chat-bubble you"><strong>你:</strong> 我 Agent 遇到个飞书权限问题</div>
+                        <div class="chat-bubble friend"><strong>朋友:</strong> 什么问题？</div>
+                        <div class="chat-bubble you"><strong>你:</strong> 错误码 10003，好像是没有通讯录权限</div>
+                        <div class="chat-bubble friend"><strong>朋友:</strong> 你试试去后台开一下</div>
+                        <div class="chat-bubble you"><strong>你:</strong> 后台在哪？</div>
+                    </div>
+                    <p class="info-lost">报错详情、SDK 版本、已尝试方案全部丢失</p>
+                </div>
+                <div class="comparison-card after">
+                    <h3>AgentsLink</h3>
+                    <div class="chat-flow">
+                        <div class="chat-bubble you"><strong>你:</strong> 帮我把这个问题打包，我找老王帮忙</div>
+                        <div class="chat-bubble agent"><strong>Agent:</strong> 已整理协作请求，包含报错、环境、已尝试方案。复制发给老王即可。</div>
+                        <div class="chat-bubble agent"><strong>Agent:</strong> 收到老王 Agent 的回复：错误码 10003 是租户管理员未审批权限，已给出 4 步解决方案。</div>
+                        <div class="chat-bubble agent"><strong>Agent:</strong> 建议先执行方案 A，需要你联系管理员审批。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="how-it-works-header">
+                <span class="section-eyebrow">使用流程</span>
+                <h2>三步完成协作</h2>
+                <p>Agent 负责打包和解读，你只需要转发</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">01</div>
+                    <h3>Agent 打包问题</h3>
+                    <p>对你的 Agent 说"帮我打包这个问题"，它会从当前对话中提取报错信息、代码片段、环境配置、已尝试方案，生成结构化的协作请求。</p>
+                    <div class="step-command">"帮我打包，找人帮忙看看"</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">02</div>
+                    <h3>你转发给朋友</h3>
+                    <p>复制 Agent 生成的文本，通过微信、飞书或任何渠道发给朋友。朋友粘贴给自己的 Agent，对方 Agent 自动识别并分析。</p>
+                    <div class="step-command">微信 / 飞书 / 任何方式</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">03</div>
+                    <h3>收到专业回复</h3>
+                    <p>朋友的 Agent 基于完整上下文分析问题，生成结构化回复。朋友发回给你，你的 Agent 整合建议，告诉你下一步怎么做。</p>
+                    <div class="step-command">"方案 A 试了不行，继续追问"</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="features-header">
+                <span class="section-eyebrow">为什么选择 AgentsLink</span>
+                <h2>简单、安全、零成本</h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature">
+                    <div class="feature-icon">&#128230;</div>
+                    <h3>信息零损耗</h3>
+                    <p>Agent 打包完整技术上下文：报错、代码、配置、已尝试方案，比人工转述准确 10 倍。</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">&#128274;</div>
+                    <h3>只读咨询模式</h3>
+                    <p>V1 只做只读咨询——发问题、收建议。不涉及文件写入或远程执行，安全边界清晰。</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">&#128100;</div>
+                    <h3>你始终掌控</h3>
+                    <p>打包内容在对话流中完全可见。手动传递天然过滤不想发的信息。决策权始终在你。</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">&#128176;</div>
+                    <h3>零成本运行</h3>
+                    <p>纯 Skill 文件，不需要服务器、域名或数据库。安装后立即可用。</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">&#128737;</div>
+                    <h3>自动脱敏</h3>
+                    <p>打包时自动过滤 API Key、密码、私钥等敏感信息，替换为安全占位符。</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">&#128260;</div>
+                    <h3>支持追问</h3>
+                    <p>一轮不够？直接说"继续追问"，Agent 结合之前的上下文生成追问请求，多轮协作直到解决。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Install -->
+    <section class="install" id="install">
+        <div class="container">
+            <div class="install-header">
+                <span class="section-eyebrow">Get Started</span>
+                <h2>一键安装</h2>
+                <p>一行命令，让你的 Agent 获得协作能力</p>
+            </div>
+            <div class="install-box">
+                <div class="install-box-header">
+                    <span class="install-box-title">终端一行安装</span>
+                    <button class="install-copy-btn" id="copyBtn" onclick="copyInstallText()">复制</button>
+                </div>
+                <div class="install-content" id="installText">Install this skill: curl -s https://agentslink.link/install -o ~/.claude/skills/agents-link.md</div>
+            </div>
+            <div class="install-steps">
+                <div class="install-step">
+                    <div class="install-step-num">1</div>
+                    <p>复制上面的命令，粘贴给你的 Agent</p>
+                </div>
+                <div class="install-step">
+                    <div class="install-step-num">2</div>
+                    <p>重启 Claude Code 会话</p>
+                </div>
+                <div class="install-step">
+                    <div class="install-step-num">3</div>
+                    <p>说"帮我打包这个问题"开始使用</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 32px;">
+                <a href="https://agentslink.link/install" style="color: var(--terracotta); font-size: 0.9rem; text-decoration: underline; text-underline-offset: 4px;">查看更多安装方式</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-left">
+                <a href="#" class="footer-logo">
+                    <span class="logo-mark"></span>
+                    AgentsLink
+                </a>
+                <ul class="footer-links">
+                    <li><a href="#how-it-works">使用流程</a></li>
+                    <li><a href="#install">安装</a></li>
+                </ul>
+            </div>
+            <div class="footer-right">
+                AgentsLink v1 — 协作上下文包
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Nav scroll effect
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // Copy install text
+        function copyInstallText() {
+            const el = document.getElementById('installText');
+            const text = el.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.textContent = '已复制';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '复制';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Intersection Observer for fade-in
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('.step, .feature, .comparison-card, .install-box').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
