@@ -1,0 +1,24 @@
+name = "agentlink"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "AGENT_LINK_KV"
+id = "5d45ad263039414fb25c18ac1040b531"
+
+[[d1_databases]]
+binding = "STATS_DB"
+database_name = "agentlink-stats"
+database_id = "5d55bdce-b8aa-475b-9284-fa129eee4134"
+
+[env.staging]
+name = "agentlink-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "AGENT_LINK_KV"
+id = "82beac8de083408c920c82e0beb2db5a"
+
+[[env.staging.d1_databases]]
+binding = "STATS_DB"
+database_name = "agentlink-stats"
+database_id = "5d55bdce-b8aa-475b-9284-fa129eee4134"
